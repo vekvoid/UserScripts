@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name Instagram Feed Auto Like
+// @name Instagram Auto Like
 // @description instagram.com like personal feed, auto liker.
 // @namespace https://github.com/vekvoid/UserScripts
-// @homepageURL https://github.com/vekvoid/UserScripts/tree/main/Instagram%20Feed%20Auto%20Like
-// @downloadURL https://github.com/vekvoid/UserScripts/raw/main/Instagram%20Feed%20Auto%20Like/Instagram%20Feed%20Auto%20Like.user.js
-// @updateURL   https://github.com/vekvoid/UserScripts/raw/main/Instagram%20Feed%20Auto%20Like/Instagram%20Feed%20Auto%20Like.user.js
+// @homepageURL https://github.com/vekvoid/UserScripts/tree/main/Instagram%20Auto%20Like
+// @downloadURL https://github.com/vekvoid/UserScripts/raw/main/Instagram%20Auto%20Like/Instagram%20Auto%20Like.user.js
+// @updateURL   https://github.com/vekvoid/UserScripts/raw/main/Instagram%20Auto%20Like/Instagram%20Auto%20Like.user.js
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match https://*.instagram.com/*
 // @grant none
@@ -15,7 +15,7 @@ const DETECT_PAGE_CHANGE_INTERVAL = 1000;
 const POSTS_CONTAINER_SELECTOR = '.cGcGK  > div:nth-child(2)';
 const LIKE_BUTTONS_CONTAINER_SELECTOR = '.fr66n';
 const LIKE_ICONS_SELECTOR = 'svg[aria-label="Like"]';
-const OBSERVING_CLASS_NAME = 'ifal-observing';
+const OBSERVING_CLASS_NAME = 'ial-observing';
 const NOT_OBSERVING_LIKE_ICONS_SELECTOR = `${LIKE_BUTTONS_CONTAINER_SELECTOR}:not(.${OBSERVING_CLASS_NAME}) ${LIKE_ICONS_SELECTOR}`;
 
 let likes = 0;
