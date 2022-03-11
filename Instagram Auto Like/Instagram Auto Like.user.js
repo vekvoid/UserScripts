@@ -12,7 +12,7 @@
 // ==/UserScript==
 
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const POSTS_CONTAINER_SELECTOR = '.cGcGK  > div:nth-child(2)';
+const POSTS_CONTAINER_SELECTOR = '.CZW53 > div:nth-child(3)';
 const LIKE_BUTTONS_CONTAINER_SELECTOR = '.fr66n';
 const LIKE_ICONS_SELECTOR = 'svg[aria-label="Like"]';
 const OBSERVING_CLASS_NAME = 'ial-observing';
@@ -23,6 +23,8 @@ let currentPage = window.top.location.href;
 let previousPage = "";
 
 window.addEventListener('DOMContentLoaded', () => {
+  console.info("Instagram Auto Like Started");
+
   setInterval(() => {
     currentPage = window.top.location.href.split("#")[0];
 
@@ -52,7 +54,7 @@ const likeButtonObserver = new IntersectionObserver((entries, observer) => {
     if(entry.isIntersecting && entry.target.querySelector('svg[aria-label="Like"]')) {
       try {
         simulateClicks(entry.target.firstChild.firstChild, 'click');
-        console.log(likes + " likes for this session");
+        console.debug(likes + " likes for this session");
         observer.unobserve(entry.target);
         entry.target.classList.remove("ctm-observing");
       } catch(err) {
@@ -128,7 +130,7 @@ const main = () => {
     
     clearInterval(waitForMainContainer);
       
-    console.log('Instagram Feed Auto Like');
+    console.debug('Instagram Auto Like: Main content found.');
   
     mainContent.querySelectorAll("article").forEach(startObservingPostLikeButton);
 
