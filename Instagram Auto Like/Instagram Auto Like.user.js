@@ -9,6 +9,9 @@
 // @version 1.0.1
 // ==/UserScript==
 
+const logLevels = { trace: 10, debug: 20, info: 30, warn: 40, error: 50, fatal: 60 };
+
+const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
 const POSTS_CONTAINER_SELECTOR = 'main > section > div:first-child > div:nth-child(3)';
 const LIKE_BUTTONS_SELECTOR = '._aamw > ._abl-';
@@ -16,12 +19,21 @@ const LIKE_ICONS_SELECTOR = 'svg[aria-label="Like"]';
 const OBSERVING_CLASS_NAME = 'ial-observing';
 const NOT_OBSERVING_LIKE_ICONS_SELECTOR = `${LIKE_BUTTONS_SELECTOR}:not(.${OBSERVING_CLASS_NAME}) ${LIKE_ICONS_SELECTOR}`;
 
+const logger = {
+  trace: (...args) => (logLevels.trace >= CURRENT_LOG_LEVEL) && console.trace(...args),
+  debug: (...args) => (logLevels.debug >= CURRENT_LOG_LEVEL) && console.log(...args),
+  info: (...args) => (logLevels.info >= CURRENT_LOG_LEVEL) && console.info(...args),
+  warn: (...args) => (logLevels.warn >= CURRENT_LOG_LEVEL) && console.warn(...args),
+  error: (...args) => (logLevels.error >= CURRENT_LOG_LEVEL) && console.error(...args),
+  fatal: (...args) => (logLevels.fatal >= CURRENT_LOG_LEVEL) && console.fatal(...args),
+};
+
 let likes = 0;
 let currentPage = window.top.location.href;
 let previousPage = "";
 
 window.addEventListener('DOMContentLoaded', () => {
-  console.info("Instagram Auto Like Started");
+  logger.info("Instagram Auto Like Started");
 
   setInterval(() => {
     currentPage = window.top.location.href.split("#")[0];
@@ -52,11 +64,11 @@ const likeButtonObserver = new IntersectionObserver((entries, observer) => {
     if(entry.isIntersecting && entry.target.querySelector('svg[aria-label="Like"]')) {
       try {
         simulateClicks(entry.target.firstChild.firstChild, 'click');
-        console.debug(likes + " likes for this session");
+        logger.debug(likes + " likes for this session");
         observer.unobserve(entry.target);
         entry.target.classList.remove("ctm-observing");
       } catch(err) {
-        console.warn(err.message) 
+        logger.warn(err.message) 
       }
     }
   });
@@ -68,23 +80,23 @@ const likeButtonObserver = new IntersectionObserver((entries, observer) => {
 const startObservingPostLikeButton = (post) => {
   const likeSvg = post.querySelector(NOT_OBSERVING_LIKE_ICONS_SELECTOR);
   if (likeSvg) {
-    // console.log("likesvg", likeSvg)
+    logger.debug("likesvg", likeSvg)
     const likeBtn = likeSvg.closest(LIKE_BUTTONS_SELECTOR);
     likeBtn.classList.add(OBSERVING_CLASS_NAME);
     likeButtonObserver.observe(likeBtn);
-    // console.log("observing like btn", likeBtn)
+    logger.debug("observing like btn", likeBtn)
   }
 };
 
 const articlesObserver = new MutationObserver((mutations) => {
-  // console.log("mutations", mutations)
+  logger.debug("mutations", mutations)
   mutations.forEach((mutation) => {
     mutation.addedNodes.forEach((node) => {
       if (node.tagName !== "ARTICLE") {
         return;
       }
 
-      // console.log(node);
+      logger.debug(node);
       startObservingPostLikeButton(node);
     });
   });
@@ -93,7 +105,7 @@ const articlesObserver = new MutationObserver((mutations) => {
 const mainSectionObserver = new MutationObserver((mutations) => {
   mutations.forEach((mutation) => {
     mutation.addedNodes.forEach((node) => {
-      console.log("mainSectionObserver", node);
+      logger.debug("mainSectionObserver", node);
 
       const mainContent = document.querySelector(POSTS_CONTAINER_SELECTOR);
       if (!mainContent) {
@@ -128,7 +140,7 @@ const main = () => {
     
     clearInterval(waitForMainContainer);
       
-    console.debug('Instagram Auto Like: Main content found.');
+    logger.debug('Instagram Auto Like: Main content found.');
   
     mainContent.querySelectorAll("article").forEach(startObservingPostLikeButton);
 
