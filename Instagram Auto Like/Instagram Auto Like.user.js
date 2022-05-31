@@ -6,7 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match https://*.instagram.com/*
 // @grant none
-// @version 1.0.0
+// @version 1.0.1
 // ==/UserScript==
 
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
