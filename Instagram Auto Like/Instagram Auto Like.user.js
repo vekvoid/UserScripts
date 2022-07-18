@@ -13,7 +13,7 @@ const logLevels = { trace: 10, debug: 20, info: 30, warn: 40, error: 50, fatal: 
 
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const POSTS_CONTAINER_SELECTOR = 'main > section > div:first-child > div:nth-child(3)';
+const POSTS_CONTAINER_SELECTOR = 'main section > div:first-child > div:nth-child(3)';
 const LIKE_BUTTONS_SELECTOR = '._aamw > ._abl-';
 const LIKE_ICONS_SELECTOR = 'svg[aria-label="Like"]';
 const OBSERVING_CLASS_NAME = 'ial-observing';
