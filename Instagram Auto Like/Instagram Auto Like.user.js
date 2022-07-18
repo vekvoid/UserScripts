@@ -6,7 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match https://*.instagram.com/*
 // @grant none
-// @version 1.1.0
+// @version 1.1.1
 // ==/UserScript==
 
 const logLevels = { trace: 10, debug: 20, info: 30, warn: 40, error: 50, fatal: 60 };
