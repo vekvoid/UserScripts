@@ -32,7 +32,7 @@ let likes = 0;
 let currentPage = window.top.location.href;
 let previousPage = "";
 
-window.addEventListener('DOMContentLoaded', () => {
+(() => {
   logger.info("Instagram Auto Like Started");
 
   setInterval(() => {
@@ -46,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     main();
   }, DETECT_PAGE_CHANGE_INTERVAL);
-});
+})();
 
 function simulateClicks(el, eventType){
   if (el.fireEvent) {
