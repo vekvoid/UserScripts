@@ -31,33 +31,30 @@ const logger = {
   /* eslint-enable no-console */
 };
 
-const styles = `
-  <style>
-    .tps-pinned-container {
-      min-height: 0;
-      overflow: hidden;
-      transition: all 250ms ease 0ms;
-    }
+const css = `
+  .tps-pinned-container {
+    min-height: 0;
+    overflow: hidden;
+    transition: all 250ms ease 0ms;
+  }
 
-    .dpqRKW .tps-remove-pinned-streamer {
-      opacity: 0;
-    }
+  .dpqRKW .tps-remove-pinned-streamer {
+    opacity: 0;
+  }
 
-    .dpqRKW:hover .tps-remove-pinned-streamer {
-      opacity: 0.5;
-    }
+  .dpqRKW:hover .tps-remove-pinned-streamer {
+    opacity: 0.5;
+  }
 
-    .tps-remove-pinned-streamer {
-      transition: all 150ms ease 0ms;
-      opacity: 0.5;
-    }
+  .tps-remove-pinned-streamer {
+    transition: all 150ms ease 0ms;
+    opacity: 0.5;
+  }
 
-    .tps-remove-pinned-streamer:hover {
-      opacity: 1 !important;
-    }
-  </style>
+  .tps-remove-pinned-streamer:hover {
+    opacity: 1 !important;
+  }
 `;
-document.head.innerHTML += styles;
 
 let currentPage = window.top.location.href;
 let previousPage = '';
@@ -103,6 +100,8 @@ const main = () => {
 
     logger.debug('Main content found.');
 
+    injectCSS();
+
     const observer = new MutationObserver(async () => {
       if (isWorking) {
         return;
@@ -141,6 +140,12 @@ const main = () => {
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }, 500);
+};
+
+const injectCSS = () => {
+  const style = document.createElement('style');
+  document.head.appendChild(style);
+  style.appendChild(document.createTextNode(css));
 };
 
 const addStreamer = async () => {
