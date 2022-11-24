@@ -16,7 +16,7 @@ const logLevels = {
 const NAME = 'Twitch Pinned Streamers';
 const CURRENT_LOG_LEVEL = logLevels.debug;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const ALL_RELEVANT_CONTENT_SELECTOR = '.hVqkZv';
+const ALL_RELEVANT_CONTENT_SELECTOR = '.dajtya';
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
 
@@ -43,12 +43,12 @@ const css = `
   }
 
   .dpqRKW:hover .tps-remove-pinned-streamer {
-    opacity: 0.5;
+    opacity: 0.3;
   }
 
   .tps-remove-pinned-streamer {
     transition: all 150ms ease 0ms;
-    opacity: 0.5;
+    opacity: 0.3;
   }
 
   .tps-remove-pinned-streamer:hover {
@@ -111,14 +111,15 @@ const main = () => {
         return;
       }
 
-      const sidebar = relevantContent.querySelector('.side-nav.side-nav--expanded .Layout-sc-nxg1ff-0.SVxtW');
+      const sidebar = relevantContent.querySelector('.side-nav.side-nav--expanded');
       logger.debug(sidebar);
       if (!sidebar) {
         return;
       }
 
+      // '.simplebar-content .side-bar-contents nav div > div > div'
       const sidebarContent = sidebar.querySelector(
-        '.InjectLayout-sc-588ddc-0 .simplebar-content .side-bar-contents nav div > div > div',
+        '#side-nav div > div > div',
       );
 
       const anonFollowedElement = document.createElement('div');
@@ -238,26 +239,27 @@ const renderPinnedStreamers = async () => {
 
 // HTML templates
 
-const pinnedHeader = () => `
-<div class="Layout-sc-nxg1ff-0 hbYWXo side-nav-header" data-a-target="side-nav-header-expanded">
-  <h2 style="display:inline-block;" class="CoreText-sc-cpl358-0 ezafKb">Pinned Channels</h2>
-  ${addBtn()}
-</div>`;
+const pinnedHeader = () => {
+  const clonedPinnedHeader = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav-header[data-a-target='side-nav-header-expanded']").cloneNode(true);
+  const h2 = clonedPinnedHeader.querySelector("h2");
+  h2.innerText = "Pinned Channels";
+  h2.setAttribute("style", "display:inline-block;");
+  clonedPinnedHeader.innerHTML += addBtn();
 
-const addBtn = () => `
-<button id="tps-add-streamer" title="Add Pinned Streamer" style="width:20px;height:16px;" class="ScCoreButton-sc-1qn4ixc-0 ffyxRu ScButtonIcon-sc-o7ndmn-0 nHKTN" data-test-selector="side-nav__visibility-toggle" aria-label="Add Pinned Streamer" data-a-target="side-nav-arrow" aria-describedby="899ca5e6b29344b30e076163389e61c5">
-  <div class="ButtonIconFigure-sc-1ttmz5m-0 fbCCvx">
-    <div class="ScIconLayout-sc-1bgeryd-0 cXxJjc">
-      <div class="ScAspectRatio-sc-1sw3lwy-1 kPofwJ tw-aspect">
-        <div class="ScAspectSpacer-sc-1sw3lwy-0 dsswUS"></div><svg width="100%" height="100%" version="1.1" viewBox="0 0 25 25" x="0px" y="0px" class="ScIconSVG-sc-1bgeryd-1 ifdSJl">
-          <g>
-            <path vector-effect="non-scaling-stroke" d="M 12 2 C 6.4889971 2 2 6.4889971 2 12 C 2 17.511003 6.4889971 22 12 22 C 17.511003 22 22 17.511003 22 12 C 22 6.4889971 17.511003 2 12 2 z M 12 4 C 16.430123 4 20 7.5698774 20 12 C 20 16.430123 16.430123 20 12 20 C 7.5698774 20 4 16.430123 4 12 C 4 7.5698774 7.5698774 4 12 4 z M 11 7 L 11 11 L 7 11 L 7 13 L 11 13 L 11 17 L 13 17 L 13 13 L 17 13 L 17 11 L 13 11 L 13 7 L 11 7 z"></path>
-          </g>
-        </svg>
-      </div>
-    </div>
-  </div>
-</button>`;
+  return clonedPinnedHeader.outerHTML;
+};
+
+const addBtn = () => {
+  const clonedBtn = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav.side-nav--expanded[data-a-target='side-nav-bar']").querySelector(".simplebar-content button[data-a-target='side-nav-arrow']").cloneNode(true);
+  clonedBtn.title = "Add Pinned Streamer";
+  clonedBtn.id = "tps-add-streamer";
+  clonedBtn.setAttribute("style", "width:20px;height:16px;left:6px;");
+  clonedBtn.querySelector("svg").setAttribute("viewBox", "0 0 25 25");
+  clonedBtn.querySelector("g").innerHTML = `<path vector-effect="non-scaling-stroke" d="M 12 2 C 6.4889971 2 2 6.4889971 2 12 C 2 17.511003 6.4889971 22 12 22 C 17.511003 22 22 17.511003 22 12 C 22 6.4889971 17.511003 2 12 2 z M 12 4 C 16.430123 4 20 7.5698774 20 12 C 20 16.430123 16.430123 20 12 20 C 7.5698774 20 4 16.430123 4 12 C 4 7.5698774 7.5698774 4 12 4 z M 11 7 L 11 11 L 7 11 L 7 13 L 11 13 L 11 17 L 13 17 L 13 13 L 17 13 L 17 11 L 13 11 L 13 7 L 11 7 z"></path>`;
+
+  console.log("aoeuaoue")
+  return clonedBtn.outerHTML;
+}
 
 const pinnedStreamer = ({
   user, id, displayName, profileImageURL, isLive, viewers = '', category,
@@ -265,34 +267,34 @@ const pinnedStreamer = ({
   const removeBtn = `<button class="tps-remove-pinned-streamer" data-id="${id}" title="Remove pinned streamer" style="position:absolute;top:-6px;left:2px;z-index:1;">x</button>`;
   const prettyViewers = stylizedViewers(viewers);
 
-  return `
-<div style="transition-property: transform, opacity; transition-timing-function: ease;" class="ScTransitionBase-sc-eg1bd7-0 dpqRKW tw-transition">
-  <div>
-    ${removeBtn}
-    <div style="${!isLive ? 'opacity:0.4;' : ''}" class="Layout-sc-nxg1ff-0 fcPbos side-nav-card" data-test-selector="side-nav-card"><a data-a-id="recommended-channel-0" data-test-selector="recommended-channel" class="ScCoreLink-sc-udwpw5-0 cmQKL InjectLayout-sc-588ddc-0 hqHHYw side-nav-card__link tw-link" href="/${user}">
-        <div class="Layout-sc-nxg1ff-0 kZFVrV side-nav-card__avatar">
-          <figure aria-label="${displayName}" class="ScAvatar-sc-12nlgut-0 dncwPH tw-avatar"><img class="InjectLayout-sc-588ddc-0 iDjrEF tw-image tw-image-avatar" alt="${displayName}" src="${profileImageURL}"></figure>
-        </div>
-        <div class="Layout-sc-nxg1ff-0 blhocS">
-          <div data-a-target="side-nav-card-metadata" class="Layout-sc-nxg1ff-0 bGPqDX">
-            <div class="Layout-sc-nxg1ff-0 gcwIMz side-nav-card__title">
-              <p title="${displayName}" data-a-target="side-nav-title" class="CoreText-sc-cpl358-0 gYupEs InjectLayout-sc-588ddc-0 emHXNr">${displayName}</p>
-            </div>
-            <div class="Layout-sc-nxg1ff-0 bXhxYI side-nav-card__metadata" data-a-target="side-nav-game-title">
-              <p title="${isLive ? category : ''}" class="CoreText-sc-cpl358-0 ciPVTQ">${isLive ? category : ''}</p>
-            </div>
-          </div>
-          <div class="Layout-sc-nxg1ff-0 iiA-dIp side-nav-card__live-status" data-a-target="side-nav-live-status">
-            <div class="Layout-sc-nxg1ff-0 gcwIMz">
-              ${isLive ? '<div class="ScChannelStatusIndicator-sc-1cf6j56-0 dtUsEc tw-channel-status-indicator" data-test-selector="0" aria-label="Live"></div>' : ''}
-              <div class="Layout-sc-nxg1ff-0 gtLBqE"><span data-test-selector="1" aria-label="${prettyViewers} viewers" class="CoreText-sc-cpl358-0 iUznyJ">${prettyViewers}</span></div>
-            </div>
-          </div>
-        </div>
-      </a></div>
-  </div>
-</div>
-  `;
+  const clonedPinnedStreamer = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav-section .side-nav-card[data-test-selector='side-nav-card']").parentNode.parentNode.cloneNode(true);
+  if (!isLive) {
+    clonedPinnedStreamer.querySelector(".side-nav-card[data-test-selector='side-nav-card']").setAttribute("style", "opacity:0.4;");
+  }
+  clonedPinnedStreamer.querySelector("a").setAttribute("href", `/${user}`);
+  const figure = clonedPinnedStreamer.querySelector("figure");
+  figure.setAttribute("aria-label", displayName)
+  const img = figure.querySelector("img");
+  img.setAttribute("alt", displayName);
+  img.setAttribute("src", profileImageURL);
+  const metadata = clonedPinnedStreamer.querySelector("[data-a-target='side-nav-card-metadata'] p");
+  metadata.title = displayName;
+  metadata.innerText = displayName;
+  const streamCategory = clonedPinnedStreamer.querySelector("[data-a-target='side-nav-game-title'] p");
+  streamCategory.title = isLive ? category : '';
+  streamCategory.innerText = isLive ? category : '';
+  const liveStatus = clonedPinnedStreamer.querySelector("div[data-a-target='side-nav-live-status']");
+  if (!isLive) {
+    liveStatus.innerHTML = "";
+  } else {
+    const liveSpan = liveStatus.querySelector("span");
+    liveSpan.setAttribute("aria-label", `${prettyViewers} viewers`);
+    liveSpan.innerText = prettyViewers;
+  }
+
+  clonedPinnedStreamer.querySelector("div").innerHTML = removeBtn + clonedPinnedStreamer.querySelector("div").innerHTML;
+
+  return clonedPinnedStreamer.outerHTML;
 };
 
 const stylizedViewers = (viewers) => {
