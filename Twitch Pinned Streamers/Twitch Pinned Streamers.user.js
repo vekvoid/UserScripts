@@ -14,8 +14,9 @@ const logLevels = {
 };
 
 const NAME = 'Twitch Pinned Streamers';
-const CURRENT_LOG_LEVEL = logLevels.debug;
+const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
+const PINNED_REFRESH_DELAY_DAYS = 1;
 const ALL_RELEVANT_CONTENT_SELECTOR = '.dajtya';
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
@@ -85,7 +86,7 @@ const main = () => {
     clearInterval(waitForMainContainer);
   }
 
-  waitForMainContainer = setInterval(() => {
+  waitForMainContainer = setInterval(async () => {
     relevantContent = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR);
 
     if (!relevantContent) {
@@ -99,6 +100,20 @@ const main = () => {
     clearInterval(waitForMainContainer);
 
     logger.debug('Main content found.');
+
+    // Refresh localStorage pinned data to get new posible avatar changes.
+
+    const lastRefreshedAt = localStorageGetPinnedRefresheddAt();
+
+    if (requireDataRefresh(lastRefreshedAt)) {
+      logger.debug("Refreshing pinned streamers.");
+
+      try {
+        await refreshPinnedData();
+      } catch (error) {
+        logger.warn(`Could not refresh pinned streamers. ${error?.message}`);
+      }
+    }
 
     injectCSS();
 
@@ -142,6 +157,49 @@ const main = () => {
     observer.observe(document.body, { childList: true, subtree: true });
   }, 500);
 };
+
+const requireDataRefresh = (lastRefreshDate) => {
+  if (!lastRefreshDate) {
+    return true;
+  }
+
+  const now = new Date();
+
+  const differenceMs = now - lastRefreshDate;
+  const MILLISECONDS = 1000;
+  const SECONDS = 60;
+  const MINUTES = 60;
+  const HOURS = 24;
+  const differenceDays = differenceMs / MILLISECONDS / SECONDS / MINUTES / HOURS;
+
+  if (differenceDays < PINNED_REFRESH_DELAY_DAYS) {
+    return false;
+  }
+
+  return true;
+};
+
+const refreshPinnedData = async () => {
+  const pinned = localStorageGetPinned();
+
+  const promises = pinned.map((user) => getTwitchUser(user?.user || ""));
+  const fetchedPinned = await Promise.all(promises);
+
+  fetchedPinned.forEach((fetched) => {
+    const foundIndex = pinned.findIndex((user) => user.user.toLowerCase() === fetched?.user?.toLowerCase());
+    if (foundIndex < 0) {
+      return;
+    }
+
+    pinned[foundIndex] = fetched;
+  })
+
+  localStorageSetPinned(pinned);
+  localStorageSetPinnedRefreshededAt(new Date());
+  logger.info("Pinned data refreshed.");
+
+
+}
 
 const injectCSS = () => {
   const style = document.createElement('style');
@@ -257,7 +315,6 @@ const addBtn = () => {
   clonedBtn.querySelector("svg").setAttribute("viewBox", "0 0 25 25");
   clonedBtn.querySelector("g").innerHTML = `<path vector-effect="non-scaling-stroke" d="M 12 2 C 6.4889971 2 2 6.4889971 2 12 C 2 17.511003 6.4889971 22 12 22 C 17.511003 22 22 17.511003 22 12 C 22 6.4889971 17.511003 2 12 2 z M 12 4 C 16.430123 4 20 7.5698774 20 12 C 20 16.430123 16.430123 20 12 20 C 7.5698774 20 4 16.430123 4 12 C 4 7.5698774 7.5698774 4 12 4 z M 11 7 L 11 11 L 7 11 L 7 13 L 11 13 L 11 17 L 13 17 L 13 13 L 17 13 L 17 11 L 13 11 L 13 7 L 11 7 z"></path>`;
 
-  console.log("aoeuaoue")
   return clonedBtn.outerHTML;
 }
 
@@ -442,5 +499,15 @@ const localStorageGetPinned = () => {
 
 const localStorageSetPinned = (data) => {
   localStorage.setItem('tps:pinned', JSON.stringify(data));
+  return true;
+};
+
+const localStorageGetPinnedRefresheddAt = () => {
+  const pinnedRefreshededAt = localStorage.getItem('tps:pinned:refreshedat');
+  return pinnedRefreshededAt ? new Date(pinnedRefreshededAt) : new Date();
+};
+
+const localStorageSetPinnedRefreshededAt = (date) => {
+  localStorage.setItem('tps:pinned:refreshedat', date.toISOString());
   return true;
 };
