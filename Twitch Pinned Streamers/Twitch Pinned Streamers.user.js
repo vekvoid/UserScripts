@@ -39,11 +39,11 @@ const css = `
     transition: all 250ms ease 0ms;
   }
 
-  .dpqRKW .tps-remove-pinned-streamer {
+   .tps-pinned-container div .tps-remove-pinned-streamer {
     opacity: 0;
   }
 
-  .dpqRKW:hover .tps-remove-pinned-streamer {
+  .tps-pinned-container div :hover .tps-remove-pinned-streamer {
     opacity: 0.3;
   }
 
