@@ -6,7 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match        *://*.twitch.tv/*
 // @grant       none
-// @version     1.0.5
+// @version     1.0.6
 // ==/UserScript==
 
 const logLevels = {
