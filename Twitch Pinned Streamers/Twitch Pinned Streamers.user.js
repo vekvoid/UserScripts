@@ -6,7 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match        *://*.twitch.tv/*
 // @grant       none
-// @version     1.0.5
+// @version     1.0.6
 // ==/UserScript==
 
 const logLevels = {
@@ -57,25 +57,9 @@ const css = `
   }
 `;
 
-let currentPage = window.top.location.href;
+let currentPage = "window.top.location.href";
 let previousPage = '';
 let isWorking = false;
-
-(() => {
-  logger.info('Started');
-
-  setInterval(() => {
-    [currentPage] = window.top.location.href.split('#');
-
-    if (currentPage === previousPage) {
-      return;
-    }
-
-    previousPage = currentPage;
-
-    main();
-  }, DETECT_PAGE_CHANGE_INTERVAL);
-})();
 
 let waitForMainContainer;
 
@@ -157,6 +141,40 @@ const main = () => {
     observer.observe(document.body, { childList: true, subtree: true });
   }, 500);
 };
+
+(() => {
+  logger.info('Started');
+
+  // Modify "locationchange" event
+  // From https://stackoverflow.com/a/52809105
+
+  let oldPushState = history.pushState;
+  history.pushState = function pushState() {
+    let ret = oldPushState.apply(this, arguments);
+    window.dispatchEvent(new Event('pushstate'));
+    window.dispatchEvent(new Event('locationchange'));
+    return ret;
+  };
+
+  let oldReplaceState = history.replaceState;
+  history.replaceState = function replaceState() {
+    let ret = oldReplaceState.apply(this, arguments);
+    window.dispatchEvent(new Event('replacestate'));
+    window.dispatchEvent(new Event('locationchange'));
+    return ret;
+  };
+
+  window.addEventListener('popstate', () => {
+    window.dispatchEvent(new Event('locationchange'));
+  });
+
+  window.addEventListener('locationchange', function () {
+    logger.debug('Location changed');
+    main();
+  });
+
+  main();
+})();
 
 const requireDataRefresh = (lastRefreshDate) => {
   if (!lastRefreshDate) {
