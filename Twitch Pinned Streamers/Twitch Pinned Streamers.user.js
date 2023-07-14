@@ -326,10 +326,10 @@ const pinnedStreamer = ({
 
   const clonedPinnedStreamer = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav-section .side-nav-card[data-test-selector='side-nav-card']").parentNode.parentNode.cloneNode(true);
   if (!isLive) {
-    clonedPinnedStreamer.querySelector(".side-nav-card[data-test-selector='side-nav-card']").setAttribute("style", "opacity:0.4;");
+    clonedPinnedStreamer.setAttribute("style", "opacity:0.4;");
   }
   clonedPinnedStreamer.querySelector("a").setAttribute("href", `/${user}`);
-  const figure = clonedPinnedStreamer.querySelector("figure");
+  const figure = clonedPinnedStreamer.querySelector(".side-nav-card__avatar");
   figure.setAttribute("aria-label", displayName)
   const img = figure.querySelector("img");
   img.setAttribute("alt", displayName);
