@@ -7,7 +7,7 @@
 // @match        https://web.whatsapp.com/*
 // @grant        none
 // @icon         https://www.google.com/s2/favicons?domain=web.whatsapp.com
-// @version      1.0.0
+// @version      1.1.0
 // ==/UserScript==
 
 const APP_QUERY = '#app';
