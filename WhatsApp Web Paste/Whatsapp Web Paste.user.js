@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         WhatsApp Paste
+// @name         WhatsApp Web Paste
 // @namespace    https://github.com/vekvoid/UserScripts
 // @homepageURL  https://github.com/vekvoid/UserScripts/
 // @supportURL   https://github.com/vekvoid/UserScripts/issues
 // @description  Temporal workarround for WhatsApp Web paste Ctrl+V behaviour.
 // @match        https://web.whatsapp.com/*
 // @grant        none
-// @version      0.0.0
+// @version      1.0.0
 // ==/UserScript==
 
 const APP_QUERY = '#app';
