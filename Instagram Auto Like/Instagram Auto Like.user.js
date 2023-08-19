@@ -7,7 +7,7 @@
 // @match https://*.instagram.com/*
 // @grant none
 // @icon https://www.google.com/s2/favicons?domain=instagram.com
-// @version 1.1.2
+// @version 1.2.0
 // ==/UserScript==
 
 const logLevels = { trace: 10, debug: 20, info: 30, warn: 40, error: 50, fatal: 60 };
