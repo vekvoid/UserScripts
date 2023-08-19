@@ -6,6 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match https://*.instagram.com/*
 // @grant none
+// @icon https://www.google.com/s2/favicons?domain=instagram.com
 // @version 1.1.2
 // ==/UserScript==
 
