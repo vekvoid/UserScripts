@@ -13,8 +13,8 @@ const logLevels = { trace: 10, debug: 20, info: 30, warn: 40, error: 50, fatal: 
 
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const POSTS_CONTAINER_SELECTOR = 'main section > div:first-child > div:nth-child(3)';
-const LIKE_BUTTONS_SELECTOR = '._aamw > ._abl-';
+const POSTS_CONTAINER_SELECTOR = 'main > div > div > div > div:nth-child(2) > div > div:nth-child(3)';
+const LIKE_BUTTONS_SELECTOR = '[role="button"]';
 const LIKE_ICONS_SELECTOR = 'svg[aria-label="Like"]';
 const OBSERVING_CLASS_NAME = 'ial-observing';
 const NOT_OBSERVING_LIKE_ICONS_SELECTOR = `${LIKE_BUTTONS_SELECTOR}:not(.${OBSERVING_CLASS_NAME}) ${LIKE_ICONS_SELECTOR}`;
@@ -68,7 +68,7 @@ const likeButtonObserver = new IntersectionObserver((entries, observer) => {
         observer.unobserve(entry.target);
         entry.target.classList.remove("ctm-observing");
       } catch(err) {
-        logger.warn(err.message) 
+        logger.warn(err.message)
       }
     }
   });
@@ -111,7 +111,7 @@ const mainSectionObserver = new MutationObserver((mutations) => {
       if (!mainContent) {
         return;
       }
-      
+
       mainContent.querySelectorAll("article").forEach(startObservingPostLikeButton);
       articlesObserver.observe(mainContent, {attributes: true, childList: true, characterData: false, subtree:true});
     });
@@ -122,7 +122,7 @@ let waitForMainContainer;
 
 const main = () => {
   let mainContent;
-  
+
   if (waitForMainContainer) {
     clearInterval(waitForMainContainer);
   }
@@ -133,19 +133,19 @@ const main = () => {
     if (!mainContent) {
       return;
     }
-    
+
     if (mainContent.querySelectorAll("article").length < 2) {
       return;
     }
-    
+
     clearInterval(waitForMainContainer);
-      
+
     logger.debug('Instagram Auto Like: Main content found.');
-  
+
     mainContent.querySelectorAll("article").forEach(startObservingPostLikeButton);
 
     articlesObserver.observe(mainContent, {attributes: true, childList: true, characterData: false, subtree:true});
-    
+
     mainSectionObserver.observe(document.querySelector("main"), { childList: true });
   }, 500);
 };
