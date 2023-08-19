@@ -6,6 +6,7 @@
 // @description  Temporal workarround for WhatsApp Web paste Ctrl+V behaviour.
 // @match        https://web.whatsapp.com/*
 // @grant        none
+// @icon         https://www.google.com/s2/favicons?domain=web.whatsapp.com
 // @version      1.0.0
 // ==/UserScript==
 
