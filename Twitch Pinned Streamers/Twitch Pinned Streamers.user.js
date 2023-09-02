@@ -6,6 +6,7 @@
 // @supportURL  https://github.com/vekvoid/UserScripts/issues
 // @match        *://*.twitch.tv/*
 // @grant       none
+// @icon https://www.google.com/s2/favicons?domain=twitch.com
 // @version     1.0.6
 // ==/UserScript==
 
