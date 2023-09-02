@@ -17,7 +17,7 @@ const NAME = 'Twitch Pinned Streamers';
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
 const PINNED_REFRESH_DELAY_DAYS = 1;
-const ALL_RELEVANT_CONTENT_SELECTOR = '.dajtya';
+const ALL_RELEVANT_CONTENT_SELECTOR = '.jCYBxv';
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
 
