@@ -7,7 +7,7 @@
 // @match        *://*.twitch.tv/*
 // @grant       none
 // @icon https://www.google.com/s2/favicons?domain=twitch.com
-// @version     1.0.7
+// @version     1.0.8
 // ==/UserScript==
 
 const logLevels = {
