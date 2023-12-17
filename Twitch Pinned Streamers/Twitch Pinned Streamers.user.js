@@ -222,9 +222,9 @@ const requireDataRefresh = (lastRefreshDate) => {
 
 const refreshPinnedData = async () => {
   const pinned = localStorageGetPinned();
+  const userNames = pinned.map(p => p.user);
 
-  const promises = pinned.map((user) => getTwitchUser(user?.user || ""));
-  const fetchedPinned = await Promise.all(promises);
+  const fetchedPinned = batchGetTwitchUsers(userNames);
 
   fetchedPinned.forEach((fetched) => {
     const foundIndex = pinned.findIndex((user) => user.user.toLowerCase() === fetched?.user?.toLowerCase());
@@ -238,8 +238,6 @@ const refreshPinnedData = async () => {
   localStorageSetPinned(pinned);
   localStorageSetPinnedRefreshededAt(new Date());
   logger.info("Pinned data refreshed.");
-
-
 }
 
 const injectCSS = () => {
@@ -263,7 +261,7 @@ const addStreamer = async () => {
     return;
   }
 
-  const user = await getTwitchUser(streamerUser);
+  const user = await batchGetTwitchUsers([streamerUser]);
   logger.debug(user);
   if (!user.id) {
     const message = `Streamer '${streamerUser}' not found.`;
@@ -303,19 +301,8 @@ const removeStreamer = async (id) => {
 };
 
 const renderPinnedStreamers = async () => {
-  const usersIds = localStorageGetPinned().map((streamer) => streamer.id);
-  const streamersInfo = await batchGetTwitchStreamInfo(usersIds);
-
-  // Join all streamer info
-  const pinnedsMap = new Map(localStorageGetPinned().map(p => [`${p.id}`, p]));
-  const pinnedStreamers = [];
-  streamersInfo.forEach(info => {
-    pinnedStreamers.push({
-      ...pinnedsMap.get(info.id),
-      ...info,
-    });
-  });
-
+  const pinnedUsers =localStorageGetPinned().map(p => p.user);
+  const pinnedStreamers = await batchGetTwitchUsers(pinnedUsers);
 
   document.getElementById('anon-followed').querySelector('div:nth-child(2)').innerHTML = '';
 
@@ -427,12 +414,19 @@ function nFormatter(num, digits) {
 
 // GRAPHQL Requests
 
-const getTwitchUser = async (login) => {
-  const twitchUser = await twitchGQLRequest({
-    query: `query($login: String!, $skip: Boolean!) {
-      user(login: $login) {
+const batchGetTwitchUsers = async (logins) => {
+  const twitchUsers = await twitchGQLRequest({
+    query: `query($logins: [String!]!, $all: Boolean!, $skip: Boolean!) {
+      users(logins: $logins) {
+        login
+        id
         broadcastSettings {
           language
+          game {
+            displayName
+            name
+          }
+          title
         }
         createdAt
         description
@@ -440,7 +434,15 @@ const getTwitchUser = async (login) => {
         followers {
           totalCount
         }
-        id
+        stream {
+          archiveVideo @include(if: $all) {
+              id
+          }
+          createdAt
+          id
+          type
+          viewersCount
+        }
         lastBroadcast {
             startedAt
         }
@@ -458,89 +460,20 @@ const getTwitchUser = async (login) => {
         }
       }
     }`,
-    variables: { login, skip: false },
+    variables: { logins, all: false, skip: false },
   });
 
-  return {
-    user: login,
-    id: twitchUser?.data?.user?.id,
-    displayName: twitchUser?.data?.user?.displayName,
-    profileImageURL: twitchUser?.data?.user?.profileImageURL,
-  };
-};
+  const result = twitchUsers.data.users.map(user => ({
+    user: user.login,
+    displayName: user.displayName,
+    profileImageURL: user.profileImageURL,
 
-const getTwitchStreamInfo = async (userId) => {
-  const twitchUserStreamInfo = await twitchGQLRequest({
-    query: `query($id: ID!, $all: Boolean!) {
-      user(id: $id) {
-        broadcastSettings {
-          game {
-            displayName
-            name
-          }
-          title
-        }
-        login
-        stream {
-          archiveVideo @include(if: $all) {
-              id
-          }
-          createdAt
-          id
-          type
-          viewersCount
-        }
-      }
-    }
-    `,
-    variables: { id: userId, all: false },
-  });
-
-  return {
-    isLive: twitchUserStreamInfo?.data?.user?.stream?.type,
-    viewers: twitchUserStreamInfo?.data?.user?.stream?.viewersCount,
-    category: twitchUserStreamInfo?.data?.user?.broadcastSettings?.game?.displayName,
-    title: twitchUserStreamInfo?.data?.user?.broadcastSettings?.title,
-  };
-};
-
-const batchGetTwitchStreamInfo = async (usersIds) => {
-  const twitchUsersStreamInfo = await twitchGQLRequest({
-    query: `query($ids: [ID!]!, $all: Boolean!) {
-      users(ids: $ids) {
-        id
-        broadcastSettings {
-          game {
-            displayName
-            name
-          }
-          title
-        }
-        login
-        stream {
-          archiveVideo @include(if: $all) {
-              id
-          }
-          createdAt
-          id
-          type
-          viewersCount
-        }
-      }
-    }
-    `,
-    variables: { ids: usersIds, all: false },
-  });
-
-  const result = twitchUsersStreamInfo.data.users.map((info) => {
-    return {
-      id: info?.id,
-      isLive: info?.stream?.type,
-      viewers: info?.stream?.viewersCount,
-      category: info?.broadcastSettings?.game?.displayName,
-      title: info?.broadcastSettings?.title,
-    };
-  });
+    id: user.id,
+    isLive: user?.stream?.type,
+    viewers: user?.stream?.viewersCount,
+    category: user?.broadcastSettings?.game?.displayName,
+    title: user?.broadcastSettings?.title,
+  }));
 
   return result;
 };
