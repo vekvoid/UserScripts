@@ -18,6 +18,7 @@ const NAME = 'Twitch Pinned Streamers';
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
 const PINNED_REFRESH_DELAY_DAYS = 1;
+const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
@@ -62,6 +63,8 @@ let currentPage = "window.top.location.href";
 let previousPage = '';
 let isWorking = false;
 
+let isTabFocused = false;
+
 let waitForMainContainer;
 
 const main = () => {
@@ -72,6 +75,16 @@ const main = () => {
   }
 
   waitForMainContainer = setInterval(async () => {
+    window.addEventListener('focus', function() {
+      logger.debug('Focused tab');
+      isTabFocused = true;
+    });
+
+    window.addEventListener('blur', function() {
+      logger.debug('Tab lost focus');
+      isTabFocused = false;
+    });
+
     relevantContent = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR);
 
     if (!relevantContent) {
@@ -130,6 +143,15 @@ const main = () => {
       sidebarContent.insertBefore(anonFollowedElement, sidebarContent.childNodes[0]);
 
       await renderPinnedStreamers();
+
+      setInterval(async () => {
+        if (!isTabFocused) {
+          return;
+        }
+
+        await renderPinnedStreamers();
+        logger.info("Refreshed pinned streamers displayed data");
+      }, REFRESH_DISPLAYED_DATA_DELAY_MINUTES*60*1000);
 
       document.getElementById('tps-add-streamer').onclick = addStreamer;
 
@@ -281,14 +303,19 @@ const removeStreamer = async (id) => {
 };
 
 const renderPinnedStreamers = async () => {
-  const promises = localStorageGetPinned().map(async (streamer) => {
-    const streamerInfo = await getTwitchStreamInfo(streamer.id);
+  const usersIds = localStorageGetPinned().map((streamer) => streamer.id);
+  const streamersInfo = await batchGetTwitchStreamInfo(usersIds);
 
-    return {
-      ...streamer, ...streamerInfo,
-    };
+  // Join all streamer info
+  const pinnedsMap = new Map(localStorageGetPinned().map(p => [`${p.id}`, p]));
+  const pinnedStreamers = [];
+  streamersInfo.forEach(info => {
+    pinnedStreamers.push({
+      ...pinnedsMap.get(info.id),
+      ...info,
+    });
   });
-  const pinnedStreamers = await Promise.all(promises);
+
 
   document.getElementById('anon-followed').querySelector('div:nth-child(2)').innerHTML = '';
 
@@ -475,6 +502,47 @@ const getTwitchStreamInfo = async (userId) => {
     category: twitchUserStreamInfo?.data?.user?.broadcastSettings?.game?.displayName,
     title: twitchUserStreamInfo?.data?.user?.broadcastSettings?.title,
   };
+};
+
+const batchGetTwitchStreamInfo = async (usersIds) => {
+  const twitchUsersStreamInfo = await twitchGQLRequest({
+    query: `query($ids: [ID!]!, $all: Boolean!) {
+      users(ids: $ids) {
+        id
+        broadcastSettings {
+          game {
+            displayName
+            name
+          }
+          title
+        }
+        login
+        stream {
+          archiveVideo @include(if: $all) {
+              id
+          }
+          createdAt
+          id
+          type
+          viewersCount
+        }
+      }
+    }
+    `,
+    variables: { ids: usersIds, all: false },
+  });
+
+  const result = twitchUsersStreamInfo.data.users.map((info) => {
+    return {
+      id: info?.id,
+      isLive: info?.stream?.type,
+      viewers: info?.stream?.viewersCount,
+      category: info?.broadcastSettings?.game?.displayName,
+      title: info?.broadcastSettings?.title,
+    };
+  });
+
+  return result;
 };
 
 const twitchGQLRequest = async ({ query, variables }) => {
