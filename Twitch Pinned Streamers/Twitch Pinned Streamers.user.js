@@ -19,7 +19,12 @@ const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
 const PINNED_REFRESH_DELAY_DAYS = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
+
 const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
+const HEADER_CLONE_SELECTOR = ".side-nav-header[data-a-target='side-nav-header-expanded']";
+const BTN_CLONE_SELECTOR = ".side-nav.side-nav--expanded[data-a-target='side-nav-bar']";
+const BTN_INNER_CLONE_SELECTOR = ".simplebar-content button[data-a-target='side-nav-arrow']";
+
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
 
@@ -92,6 +97,14 @@ const main = () => {
     }
 
     if (relevantContent.childElementCount < 2) {
+      return;
+    }
+
+    if (!relevantContent.querySelector(HEADER_CLONE_SELECTOR)) {
+      return;
+    }
+
+    if (!relevantContent.querySelector(`${BTN_CLONE_SELECTOR} ${BTN_INNER_CLONE_SELECTOR}`)) {
       return;
     }
 
@@ -331,7 +344,7 @@ const renderPinnedStreamers = async () => {
 // HTML templates
 
 const pinnedHeader = () => {
-  const clonedPinnedHeader = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav-header[data-a-target='side-nav-header-expanded']").cloneNode(true);
+  const clonedPinnedHeader = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(HEADER_CLONE_SELECTOR).cloneNode(true);
   const h2 = clonedPinnedHeader.querySelector("h2");
   h2.innerText = "Pinned Channels";
   h2.setAttribute("style", "display:inline-block;");
@@ -341,7 +354,7 @@ const pinnedHeader = () => {
 };
 
 const addBtn = () => {
-  const clonedBtn = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav.side-nav--expanded[data-a-target='side-nav-bar']").querySelector(".simplebar-content button[data-a-target='side-nav-arrow']").cloneNode(true);
+  const clonedBtn = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(BTN_CLONE_SELECTOR).querySelector(BTN_INNER_CLONE_SELECTOR).cloneNode(true);
   clonedBtn.title = "Add Pinned Streamer";
   clonedBtn.id = "tps-add-streamer";
   clonedBtn.setAttribute("style", "width:20px;height:16px;left:6px;");
