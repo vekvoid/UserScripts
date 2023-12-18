@@ -274,7 +274,7 @@ const addStreamer = async () => {
     return;
   }
 
-  const user = await batchGetTwitchUsers([streamerUser]);
+  const [user] = await batchGetTwitchUsers([streamerUser]);
   logger.debug(user);
   if (!user.id) {
     const message = `Streamer '${streamerUser}' not found.`;
