@@ -19,7 +19,7 @@ const logLevels = {
 const NAME = 'Twitch Pinned Streamers';
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const PINNED_REFRESH_DELAY_DAYS = 1;
+const MITUNES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 
 const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
@@ -70,7 +70,7 @@ let currentPage = "window.top.location.href";
 let previousPage = '';
 let isWorking = false;
 
-let isTabFocused = false;
+let isTabVisible = false;
 
 let waitForMainContainer;
 
@@ -82,16 +82,6 @@ const main = () => {
   }
 
   waitForMainContainer = setInterval(async () => {
-    window.addEventListener('focus', function() {
-      logger.debug('Focused tab');
-      isTabFocused = true;
-    });
-
-    window.addEventListener('blur', function() {
-      logger.debug('Tab lost focus');
-      isTabFocused = false;
-    });
-
     relevantContent = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR);
 
     if (!relevantContent) {
@@ -114,19 +104,34 @@ const main = () => {
 
     logger.debug('Main content found.');
 
-    // Refresh localStorage pinned data to get new posible avatar changes.
+    // Tab visibility handler
 
-    const lastRefreshedAt = localStorageGetPinnedRefresheddAt();
-
-    if (requireDataRefresh(lastRefreshedAt)) {
-      logger.debug("Refreshing pinned streamers.");
-
-      try {
-        await refreshPinnedData();
-      } catch (error) {
-        logger.warn(`Could not refresh pinned streamers. ${error?.message}`);
+    document.addEventListener('visibilitychange', async () => {
+      if (document.hidden) {
+        logger.debug('Tab hidden.');
+        isTabVisible = false;
+        return;
       }
-    }
+
+
+      logger.debug('Tab visible.');
+      isTabVisible = true;
+
+      // Refresh if change to visible
+      const lastRefreshedAt = localStorageGetPinnedRefresheddAt();
+
+      if (requireDataRefresh(lastRefreshedAt)) {
+        logger.debug("Refreshing pinned streamers.");
+
+        try {
+          await refreshPinnedData();
+        } catch (error) {
+          logger.warn(`Could not refresh pinned streamers. ${error?.message}`);
+        }
+      }
+    });
+
+    // End Tab visibility handler
 
     injectCSS();
 
@@ -160,7 +165,7 @@ const main = () => {
       await renderPinnedStreamers();
 
       setInterval(async () => {
-        if (!isTabFocused) {
+        if (!isTabVisible) {
           return;
         }
 
@@ -222,13 +227,11 @@ const requireDataRefresh = (lastRefreshDate) => {
   const now = new Date();
 
   const differenceMs = now - lastRefreshDate;
-  const MILLISECONDS = 1000;
-  const SECONDS = 60;
+  const SECONDS = 1000;
   const MINUTES = 60;
-  const HOURS = 24;
-  const differenceDays = differenceMs / MILLISECONDS / SECONDS / MINUTES / HOURS;
+  const differenceMinutes = differenceMs / SECONDS / MINUTES;
 
-  if (differenceDays < PINNED_REFRESH_DELAY_DAYS) {
+  if (differenceMinutes < MITUNES_SINCE_FOCUS_LOST_FOR_REFRESH) {
     return false;
   }
 
@@ -239,7 +242,7 @@ const refreshPinnedData = async () => {
   const pinned = localStorageGetPinned();
   const userNames = pinned.map(p => p.user);
 
-  const fetchedPinned = batchGetTwitchUsers(userNames);
+  const fetchedPinned = await batchGetTwitchUsers(userNames);
 
   fetchedPinned.forEach((fetched) => {
     const foundIndex = pinned.findIndex((user) => user.user.toLowerCase() === fetched?.user?.toLowerCase());
@@ -252,7 +255,7 @@ const refreshPinnedData = async () => {
 
   localStorageSetPinned(pinned);
   localStorageSetPinnedRefreshededAt(new Date());
-  logger.info("Pinned data refreshed.");
+  logger.debug("Pinned data refreshed.");
 }
 
 const injectCSS = () => {
@@ -430,6 +433,10 @@ function nFormatter(num, digits) {
 // GRAPHQL Requests
 
 const batchGetTwitchUsers = async (logins) => {
+  if (logins.length === 0) {
+    return [];
+  }
+
   const twitchUsers = await twitchGQLRequest({
     query: `query($logins: [String!]!, $all: Boolean!, $skip: Boolean!) {
       users(logins: $logins) {
