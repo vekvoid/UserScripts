@@ -8,6 +8,8 @@
 // @grant       none
 // @icon https://www.google.com/s2/favicons?domain=twitch.com
 // @version     1.1.1
+// @downloadURL https://update.greasyfork.org/scripts/452717/Twitch%20Pinned%20Streamers%20-%20twitchtv.user.js
+// @updateURL https://update.greasyfork.org/scripts/452717/Twitch%20Pinned%20Streamers%20-%20twitchtv.meta.js
 // ==/UserScript==
 
 const logLevels = {
@@ -145,7 +147,7 @@ const main = () => {
 
       // '.simplebar-content .side-bar-contents nav div > div > div'
       const sidebarContent = sidebar.querySelector(
-        '#side-nav div > div > div',
+        '#side-nav div > div',
       );
 
       const anonFollowedElement = document.createElement('div');
@@ -289,8 +291,8 @@ const addStreamer = async () => {
   localStorageSetPinned(pinned);
   logger.debug(localStorage['tps:pinned']);
 
-  const prevHeight = document.querySelector('.tps-pinned-container').getBoundingClientRect().height;
-  const nextHeight = prevHeight + document.querySelector('.tps-pinned-container > div').getBoundingClientRect().height;
+  const prevHeight = document.querySelector('.tps-pinned-container')?.getBoundingClientRect()?.height;
+  const nextHeight = prevHeight + document.querySelector('.tps-pinned-container > div')?.getBoundingClientRect()?.height;
   document.querySelector('.tps-pinned-container').style.height = `${prevHeight}px`;
 
   await renderPinnedStreamers();
