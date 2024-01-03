@@ -487,17 +487,23 @@ const batchGetTwitchUsers = async (logins) => {
     variables: { logins, all: false, skip: false },
   });
 
-  const result = twitchUsers.data.users.map(user => ({
-    user: user.login,
-    displayName: user.displayName,
-    profileImageURL: user.profileImageURL,
+  const result = twitchUsers.data.users.map(user => {
+    if (!user) {
+      return {};
+    }
 
-    id: user.id,
-    isLive: user?.stream?.type,
-    viewers: user?.stream?.viewersCount,
-    category: user?.broadcastSettings?.game?.displayName,
-    title: user?.broadcastSettings?.title,
-  }));
+    return {
+      user: user.login,
+      displayName: user.displayName,
+      profileImageURL: user.profileImageURL,
+
+      id: user.id,
+      isLive: user?.stream?.type,
+      viewers: user?.stream?.viewersCount,
+      category: user?.broadcastSettings?.game?.displayName,
+      title: user?.broadcastSettings?.title,
+    };
+  });
 
   return result;
 };
