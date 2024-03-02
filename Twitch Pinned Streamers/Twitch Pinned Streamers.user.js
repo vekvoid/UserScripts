@@ -26,6 +26,7 @@ const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
 const HEADER_CLONE_SELECTOR = ".side-nav-header[data-a-target='side-nav-header-expanded']";
 const BTN_CLONE_SELECTOR = ".side-nav.side-nav--expanded[data-a-target='side-nav-bar']";
 const BTN_INNER_CLONE_SELECTOR = ".simplebar-content button[data-a-target='side-nav-arrow']";
+const NAV_CARD_CLONE_SELECTOR = ".side-nav-section .side-nav-card";
 
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
@@ -377,7 +378,7 @@ const pinnedStreamer = ({
   const removeBtn = `<button class="tps-remove-pinned-streamer" data-id="${id}" title="Remove pinned streamer" style="position:absolute;top:-6px;left:2px;z-index:1;">x</button>`;
   const prettyViewers = stylizedViewers(viewers);
 
-  const clonedPinnedStreamer = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(".side-nav-section .side-nav-card[data-test-selector='side-nav-card']").parentNode.parentNode.cloneNode(true);
+  const clonedPinnedStreamer = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(NAV_CARD_CLONE_SELECTOR).parentNode.parentNode.cloneNode(true);
   if (!isLive) {
     clonedPinnedStreamer.setAttribute("style", "opacity:0.4;");
   }
