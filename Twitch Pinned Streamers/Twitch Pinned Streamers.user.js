@@ -19,7 +19,7 @@ const logLevels = {
 const NAME = 'Twitch Pinned Streamers';
 const CURRENT_LOG_LEVEL = logLevels.info;
 const DETECT_PAGE_CHANGE_INTERVAL = 1000;
-const MITUNES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
+const MINUTES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 
 const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
@@ -27,6 +27,8 @@ const HEADER_CLONE_SELECTOR = ".side-nav-header[data-a-target='side-nav-header-e
 const BTN_CLONE_SELECTOR = ".side-nav.side-nav--expanded[data-a-target='side-nav-bar']";
 const BTN_INNER_CLONE_SELECTOR = ".simplebar-content button[data-a-target='side-nav-arrow']";
 const NAV_CARD_CLONE_SELECTOR = ".side-nav-section .side-nav-card";
+
+const FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR = '#live-channel-stream-information div[data-target="channel-header-right"] div:first-child';
 
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
@@ -65,11 +67,20 @@ const css = `
   .tps-remove-pinned-streamer:hover {
     opacity: 1 !important;
   }
+
+  #tps-pin-current-streamer-button[data-a-target="pin-button"]:hover {
+    background-color: var(--color-background-button-primary-hover) !important;
+  }
+
+  #tps-pin-current-streamer-button[data-a-target="unpin-button"]:hover {
+    background-color: var(--color-background-button-secondary-hover) !important;
+  }
 `;
 
 let currentPage = "window.top.location.href";
 let previousPage = '';
 let isWorking = false;
+let isWorkingPinCurrentStreamer = false;
 
 let isTabVisible = false;
 
@@ -120,7 +131,7 @@ const main = () => {
       isTabVisible = true;
 
       // Refresh if change to visible
-      const lastRefreshedAt = localStorageGetPinnedRefresheddAt();
+      const lastRefreshedAt = localStorageGetPinnedRefreshedAt();
 
       if (requireDataRefresh(lastRefreshedAt)) {
         logger.info("Refreshing pinned streamers.");
@@ -137,6 +148,8 @@ const main = () => {
     // End Tab visibility handler
 
     injectCSS();
+
+    // Menu
 
     const observer = new MutationObserver(async () => {
       if (isWorking) {
@@ -176,7 +189,7 @@ const main = () => {
         logger.info("Refreshed pinned streamers displayed data");
       }, REFRESH_DISPLAYED_DATA_DELAY_MINUTES*60*1000);
 
-      document.getElementById('tps-add-streamer').onclick = addStreamer;
+      document.getElementById('tps-add-streamer').onclick = promptAddStreamer;
 
       const mainSection = relevantContent.querySelector('main');
 
@@ -185,6 +198,32 @@ const main = () => {
       observer.disconnect();
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Pin current streamer button
+
+    const pinCurrentStreamerObserver = new MutationObserver(async () => {
+      if (isWorkingPinCurrentStreamer) {
+        return;
+      }
+      if (document.getElementById('tps-pin-current-streamer-container')) {
+        return;
+      }
+
+      const contentFound = document.querySelector(`${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR} button[data-a-target*="follow-button"]`);
+      logger.debug(contentFound);
+      if (!contentFound) {
+        return;
+      }
+
+      isWorkingPinCurrentStreamer = true;
+
+      renderPinCurrentStreamer();
+
+      isWorkingPinCurrentStreamer = false;
+      pinCurrentStreamerObserver.disconnect();
+    });
+    pinCurrentStreamerObserver.observe(document.body, { childList: true, subtree: true });
+
   }, 500);
 };
 
@@ -234,7 +273,7 @@ const requireDataRefresh = (lastRefreshDate) => {
   const MINUTES = 60;
   const differenceMinutes = differenceMs / SECONDS / MINUTES;
 
-  if (differenceMinutes < MITUNES_SINCE_FOCUS_LOST_FOR_REFRESH) {
+  if (differenceMinutes < MINUTES_SINCE_FOCUS_LOST_FOR_REFRESH) {
     return false;
   }
 
@@ -242,7 +281,7 @@ const requireDataRefresh = (lastRefreshDate) => {
 };
 
 const refreshPinnedData = async () => {
-  const pinned = localStorageGetPinned();
+  const pinned = localStorageGetAllPinned();
   const userNames = pinned.map(p => p.user);
 
   const fetchedPinned = await batchGetTwitchUsers(userNames);
@@ -257,7 +296,7 @@ const refreshPinnedData = async () => {
   })
 
   localStorageSetPinned(pinned);
-  localStorageSetPinnedRefreshededAt(new Date());
+  localStorageSetPinnedRefreshedAt(new Date());
   logger.debug("Pinned data refreshed.");
 }
 
@@ -267,14 +306,18 @@ const injectCSS = () => {
   style.appendChild(document.createTextNode(css));
 };
 
-const addStreamer = async () => {
+const promptAddStreamer = async () => {
   // eslint-disable-next-line no-alert
   const streamerUser = prompt('Streamer username:');
   if (!streamerUser) {
     return;
   }
 
-  const pinned = localStorageGetPinned();
+  await addStreamer(streamerUser);
+};
+
+const addStreamer = async (streamerUser) => {
+  const pinned = localStorageGetAllPinned();
 
   const found = pinned.find((user) => user.user.toLowerCase() === streamerUser.toLowerCase());
   if (found) {
@@ -308,7 +351,7 @@ const addStreamer = async () => {
 };
 
 const removeStreamer = async (id) => {
-  const filtered = localStorageGetPinned().filter((p) => p.id !== id && p.id);
+  const filtered = localStorageGetAllPinned().filter((p) => p.id !== id && p.id);
   localStorageSetPinned(filtered);
 
   const prevHeight = document.querySelector('.tps-pinned-container').getBoundingClientRect().height;
@@ -322,7 +365,7 @@ const removeStreamer = async (id) => {
 };
 
 const renderPinnedStreamers = async () => {
-  const pinnedUsers = localStorageGetPinned().map(p => p.user);
+  const pinnedUsers = localStorageGetAllPinned().map(p => p.user);
   const pinnedStreamers = await batchGetTwitchUsers(pinnedUsers);
 
   document.getElementById('anon-followed').querySelector('div:nth-child(2)').innerHTML = '';
@@ -349,6 +392,46 @@ const renderPinnedStreamers = async () => {
   });
 };
 
+const renderPinCurrentStreamer = () => {
+  const currentUrl = new URL(window.location.href);
+  const [ _, currentStreamerName ] = currentUrl.pathname.split('/');
+
+  if (!currentStreamerName) {
+    return;
+  }
+
+  // Rerender if exists
+  document.getElementById('tps-pin-current-streamer-container')?.remove();
+
+  const isPinned = localStorageIsPinned(currentStreamerName);
+
+  const pinStreamerCurrentHtml = pinStreamer({
+    user: currentStreamerName,
+    isPinned,
+  });
+
+  document.querySelector(`${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR}`)
+    .outerHTML += pinStreamerCurrentHtml;
+
+  document.getElementById('tps-pin-current-streamer-button').addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    if (isPinned) {
+      const id = localStorageGetPinned(currentStreamerName)?.id;
+      if (!id) {
+        logger.error('Could not find pinned streamer:', currentStreamerName);
+        return;
+      }
+
+      await removeStreamer(id);
+    } else {
+      await addStreamer(currentStreamerName);
+    }
+
+    renderPinCurrentStreamer();
+  });
+};
+
 // HTML templates
 
 const pinnedHeader = () => {
@@ -370,7 +453,50 @@ const addBtn = () => {
   clonedBtn.querySelector("g").innerHTML = `<path vector-effect="non-scaling-stroke" d="M 12 2 C 6.4889971 2 2 6.4889971 2 12 C 2 17.511003 6.4889971 22 12 22 C 17.511003 22 22 17.511003 22 12 C 22 6.4889971 17.511003 2 12 2 z M 12 4 C 16.430123 4 20 7.5698774 20 12 C 20 16.430123 16.430123 20 12 20 C 7.5698774 20 4 16.430123 4 12 C 4 7.5698774 7.5698774 4 12 4 z M 11 7 L 11 11 L 7 11 L 7 13 L 11 13 L 11 17 L 13 17 L 13 13 L 17 13 L 17 11 L 13 11 L 13 7 L 11 7 z"></path>`;
 
   return clonedBtn.outerHTML;
-}
+};
+
+const pinStreamer = ({ user, isPinned }) => {
+  const pinText = isPinned ? 'Unpin' : 'Pin';
+  let clonedFollowButtonContainer;
+  try {
+    clonedFollowButtonContainer = new DOMParser().parseFromString(FollowButtonContainerRawHTML, 'text/html').querySelector('div');
+  } catch (error) {
+    logger.error('Could not clone follow button container.', error);
+    return '';
+  }
+  if (!clonedFollowButtonContainer) {
+    logger.error('Could not clone follow button container.');
+    return '';
+  }
+
+  clonedFollowButtonContainer.id = 'tps-pin-current-streamer-container';
+  const styledWrapper = clonedFollowButtonContainer.querySelector('div div div')?.style;
+  styledWrapper?.removeProperty('transform');
+  styledWrapper?.setProperty('padding-left', '10px');
+  const pinTextDecoration = isPinned ? '●' : '〇';
+  clonedFollowButtonContainer.querySelector('span div').innerText = `${pinTextDecoration} ${pinText}`;
+  clonedFollowButtonContainer.querySelector('.live-notifications__btn')?.parentElement?.parentElement?.remove();
+
+  const button = clonedFollowButtonContainer.querySelector('button');
+  button.id = 'tps-pin-current-streamer-button';
+  button.setAttribute('aria-label', `${pinText} ${user}`);
+  button.setAttribute('data-a-target', `${pinText.toLocaleLowerCase()}-button`);
+  button.setAttribute('data-text-selector',  `${pinText.toLocaleLowerCase()}-button`);
+  button.style?.setProperty('height', '30px');
+  button.style?.setProperty('font-weight', 'var(--font-weight-semibold');
+  button.style?.setProperty('font-size', 'var(--button-text-default');
+  if (isPinned) {
+    button.style.setProperty('background-color', 'var(--color-background-button-secondary-default)');
+    button.parentElement.style = 'background-color: transparent !important';
+  } else {
+    button.style.setProperty('background-color', 'var(--color-background-button-primary-default)');
+  }
+
+  // TODO: Add pin icon. Meanwhile, remove the default heart icon.
+  button.querySelector('.InjectLayout-sc-1i43xsx-0')?.remove();
+
+  return clonedFollowButtonContainer.outerHTML;
+};
 
 const pinnedStreamer = ({
   user, id, displayName, profileImageURL, isLive, viewers = '', category,
@@ -384,10 +510,10 @@ const pinnedStreamer = ({
   }
   clonedPinnedStreamer.querySelector("a").setAttribute("href", `/${user}`);
   const figure = clonedPinnedStreamer.querySelector(".side-nav-card__avatar");
-  figure.setAttribute("aria-label", displayName)
+  figure?.setAttribute("aria-label", displayName)
   const img = figure.querySelector("img");
-  img.setAttribute("alt", displayName);
-  img.setAttribute("src", profileImageURL);
+  img?.setAttribute("alt", displayName);
+  img?.setAttribute("src", profileImageURL);
   const metadata = clonedPinnedStreamer.querySelector("[data-a-target='side-nav-card-metadata'] p");
   metadata.title = displayName;
   metadata.innerText = displayName;
@@ -435,6 +561,20 @@ function nFormatter(num, digits) {
 
 // GRAPHQL Requests
 
+/**
+ * 
+ * @param {string} logins 
+ * @returns {Promise<{
+ *   user: string,
+ *   displayName: string,
+ *   profileImageURL: string,
+ *   id: string,
+ *   isLive: boolean,
+ *   viewers: number,
+ *   category: string,
+ *   title: string,
+ * }[]>} Async array of twitch users data
+ */
 const batchGetTwitchUsers = async (logins) => {
   if (logins.length === 0) {
     return [];
@@ -543,9 +683,14 @@ const twitchGQLRequest = async ({ query, variables }) => {
 
 // LocalStorage
 
-const localStorageGetPinned = () => {
+const localStorageGetAllPinned = () => {
   const lsPinned = localStorage.getItem('tps:pinned');
   return lsPinned ? JSON.parse(lsPinned) : [];
+};
+
+const localStorageGetPinned = (user) => {
+  const pinned = localStorageGetAllPinned();
+  return pinned.find((p) => p.user.toLowerCase() === user.toLowerCase());
 };
 
 const localStorageSetPinned = (data) => {
@@ -553,12 +698,61 @@ const localStorageSetPinned = (data) => {
   return true;
 };
 
-const localStorageGetPinnedRefresheddAt = () => {
-  const pinnedRefreshededAt = localStorage.getItem('tps:pinned:refreshedat');
-  return pinnedRefreshededAt ? new Date(pinnedRefreshededAt) : new Date();
+const localStorageIsPinned = (user) => {
+  const pinned = localStorageGetAllPinned();
+  return !!pinned.find((p) => p.user.toLowerCase() === user.toLowerCase());
 };
 
-const localStorageSetPinnedRefreshededAt = (date) => {
-  localStorage.setItem('tps:pinned:refreshedat', date.toISOString());
+const localStorageGetPinnedRefreshedAt = () => {
+  const pinnedRefreshedAt = localStorage.getItem('tps:pinned:refreshed_at');
+  return pinnedRefreshedAt ? new Date(pinnedRefreshedAt) : new Date();
+};
+
+const localStorageSetPinnedRefreshedAt = (date) => {
+  localStorage.setItem('tps:pinned:refreshed_at', date.toISOString());
   return true;
 };
+
+// Raw HTML
+
+const FollowButtonContainerRawHTML = `
+  <div class="Layout-sc-1xcs6mc-0 cwtKyw">
+      <div class="Layout-sc-1xcs6mc-0 grllUE">
+          <div style="opacity: 1; transform: translateX(50px) translateZ(0px);">
+              <div class="Layout-sc-1xcs6mc-0 lmNILC">
+                  <div class="Layout-sc-1xcs6mc-0 bzcGMK">
+                      <div class="Layout-sc-1xcs6mc-0 hkISPQ">
+                          <div style="opacity: 1;">
+                              <div class="Layout-sc-1xcs6mc-0 bXHHlg">
+                                  <div class="Layout-sc-1xcs6mc-0 fVQeCA"><button aria-label="Follow _____" data-a-target="follow-button" data-test-selector="follow-button" class="ScCoreButton-sc-ocjdkq-0 iumXyx">
+                                          <div class="ScCoreButtonLabel-sc-s7h2b7-0 gPDjGr">
+                                              <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 bFxzAY">
+                                                  <div class="Layout-sc-1xcs6mc-0 ktLpvM">
+                                                      <div class="InjectLayout-sc-1i43xsx-0 bgnKmX" style="transition: transform; opacity: 1;">
+                                                          <div class="ScAnimation-sc-s60rmz-0 kCyYsz tw-animation" data-a-target="tw-animation-target">
+                                                              <div class="Layout-sc-1xcs6mc-0 ktLpvM">
+                                                                  <div class="InjectLayout-sc-1i43xsx-0 kBtJDm">
+                                                                      <figure class="ScFigure-sc-1hrsqw6-0 btGeNA tw-svg"><svg width="20px" height="20px" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScSvg-sc-1hrsqw6-1 ihOSMR">
+                                                                              <g>
+                                                                                  <path fill-rule="evenodd" d="M9.171 4.171A4 4 0 006.343 3H6a4 4 0 00-4 4v.343a4 4 0 001.172 2.829L10 17l6.828-6.828A4 4 0 0018 7.343V7a4 4 0 00-4-4h-.343a4 4 0 00-2.829 1.172L10 5l-.829-.829zm.829 10l5.414-5.414A2 2 0 0016 7.343V7a2 2 0 00-2-2h-.343a2 2 0 00-1.414.586L10 7.828 7.757 5.586A2 2 0 006.343 5H6a2 2 0 00-2 2v.343a2 2 0 00.586 1.414L10 14.172z" clip-rule="evenodd"></path>
+                                                                              </g>
+                                                                          </svg></figure>
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      </div><span>
+                                                          <div style="transition: all; opacity: 1;">Follow</div>
+                                                      </span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </button></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+`;
