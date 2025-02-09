@@ -155,16 +155,22 @@ const main = () => {
       if (isWorking) {
         return;
       }
-      isWorking = true;
+
       if (document.getElementById('anon-followed')) {
         return;
       }
 
-      const sidebar = relevantContent.querySelector('.side-nav.side-nav--expanded');
+      const sidebar = relevantContent.querySelector(`.side-nav.side-nav--expanded`);
       logger.debug(sidebar);
       if (!sidebar) {
         return;
       }
+
+      if (!sidebar.querySelector(`${NAV_CARD_CLONE_SELECTOR}:has(.side-nav-card__avatar)`)) {
+        return;
+      }
+
+      isWorking = true;
 
       // '.simplebar-content .side-bar-contents nav div > div > div'
       const sidebarContent = sidebar.querySelector(
@@ -504,16 +510,16 @@ const pinnedStreamer = ({
   const removeBtn = `<button class="tps-remove-pinned-streamer" data-id="${id}" title="Remove pinned streamer" style="position:absolute;top:-6px;left:2px;z-index:1;">x</button>`;
   const prettyViewers = stylizedViewers(viewers);
 
-  const clonedPinnedStreamer = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(NAV_CARD_CLONE_SELECTOR).parentNode.parentNode.cloneNode(true);
+  const clonedPinnedStreamer = document.querySelector(`${ALL_RELEVANT_CONTENT_SELECTOR} ${NAV_CARD_CLONE_SELECTOR}`).parentNode.parentNode.cloneNode(true);
   if (!isLive) {
     clonedPinnedStreamer.setAttribute("style", "opacity:0.4;");
   }
   clonedPinnedStreamer.querySelector("a").setAttribute("href", `/${user}`);
   const figure = clonedPinnedStreamer.querySelector(".side-nav-card__avatar");
-  figure?.setAttribute("aria-label", displayName)
+  figure.setAttribute("aria-label", displayName)
   const img = figure.querySelector("img");
-  img?.setAttribute("alt", displayName);
-  img?.setAttribute("src", profileImageURL);
+  img.setAttribute("alt", displayName);
+  img.setAttribute("src", profileImageURL);
   const metadata = clonedPinnedStreamer.querySelector("[data-a-target='side-nav-card-metadata'] p");
   metadata.title = displayName;
   metadata.innerText = displayName;
@@ -562,8 +568,8 @@ function nFormatter(num, digits) {
 // GRAPHQL Requests
 
 /**
- * 
- * @param {string} logins 
+ *
+ * @param {string} logins
  * @returns {Promise<{
  *   user: string,
  *   displayName: string,
