@@ -26,7 +26,7 @@ const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
 const HEADER_CLONE_SELECTOR = ".side-nav-header[data-a-target='side-nav-header-expanded']";
 const BTN_CLONE_SELECTOR = ".side-nav.side-nav--expanded[data-a-target='side-nav-bar']";
 const BTN_INNER_CLONE_SELECTOR = ".simplebar-content button[data-a-target='side-nav-arrow']";
-const NAV_CARD_CLONE_SELECTOR = ".side-nav-section .side-nav-card";
+const NAV_CARD_CLONE_SELECTOR = ".side-nav-section .side-nav-card:has(.side-nav-card__avatar)";
 
 const FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR = '#live-channel-stream-information div[data-target="channel-header-right"] div:first-child';
 
@@ -166,7 +166,7 @@ const main = () => {
         return;
       }
 
-      if (!sidebar.querySelector(`${NAV_CARD_CLONE_SELECTOR}:has(.side-nav-card__avatar)`)) {
+      if (!sidebar.querySelector(`${NAV_CARD_CLONE_SELECTOR}`)) {
         return;
       }
 
