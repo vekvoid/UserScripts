@@ -265,7 +265,7 @@ const main = () => {
       anonFollowedElement.innerHTML += pinnedHeader();
       anonFollowedElement.innerHTML += '<div class="tps-pinned-container"></div>';
       sidebarContent.insertBefore(anonFollowedElement, sidebarContent.childNodes[0]);
-      pinnedHeaderBehaviour();
+      pinnedHeaderBehavior();
 
       await renderPinnedStreamers();
 
