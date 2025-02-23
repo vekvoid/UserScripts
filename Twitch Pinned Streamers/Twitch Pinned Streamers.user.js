@@ -75,6 +75,88 @@ const css = `
   #tps-pin-current-streamer-button[data-a-target="unpin-button"]:hover {
     background-color: var(--color-background-button-secondary-hover) !important;
   }
+
+
+  /* Start Menu Styles */
+
+  .tps-menu-container {
+    padding: 0px;
+    display: inline-block;
+    position: absolute;
+    transform: translate(10px, -5px);
+    z-index: 99;
+  }
+
+  .tps-menu-container button {
+    border: 0;
+    border-radius: 0.4rem;
+    margin: 0;
+    padding: 0;
+    height: 3rem;
+    width: 3rem;
+    background-color: #1f1f23;
+    cursor: pointer;
+
+    display: inline-flex;
+    -moz-box-align: center;
+    align-items: center;
+    -moz-box-pack: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  .tps-menu-container button:hover {
+    background-color: #393940;
+  }
+
+  .tps-menu-icon svg {
+    fill: white;
+  }
+
+  .tps-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    width: 200px;
+    overflow: hidden;
+    opacity: 0;
+
+    border-radius: 0.6rem !important;
+    background-color: #1f1f23 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 0px 4px rgba(0,0,0,0.4) !important;
+    color: inherit !important;
+  }
+
+  .tps-menu-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(-30px) translateX(-124px);
+  }
+
+  .tps-menu-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px;
+  }
+
+  .tps-menu-dropdown li:last-child {
+    border-bottom: none;
+  }
+
+  .tps-menu-dropdown a {
+    display: block;
+    padding: 5px;
+    border-radius: 0.4rem;
+    color: white;
+    text-decoration: none;
+  }
+
+  .tps-menu-dropdown a:hover {
+    background-color: #393940;
+  }
+
+  /* End Menu Styles*/
 `;
 
 let currentPage = "window.top.location.href";
@@ -183,6 +265,7 @@ const main = () => {
       anonFollowedElement.innerHTML += pinnedHeader();
       anonFollowedElement.innerHTML += '<div class="tps-pinned-container"></div>';
       sidebarContent.insertBefore(anonFollowedElement, sidebarContent.childNodes[0]);
+      pinnedHeaderBehaviour();
 
       await renderPinnedStreamers();
 
@@ -195,7 +278,11 @@ const main = () => {
         logger.info("Refreshed pinned streamers displayed data");
       }, REFRESH_DISPLAYED_DATA_DELAY_MINUTES*60*1000);
 
+      // Menu link onclick
       document.getElementById('tps-add-streamer').onclick = promptAddStreamer;
+      document.getElementById('tps-export').onclick = () => {
+        promptExportData(localStorageGetAllPinned().map(({user}) => ({user})))
+      };
 
       const mainSection = relevantContent.querySelector('main');
 
@@ -370,11 +457,160 @@ const removeStreamer = async (id) => {
   setTimeout(() => { document.querySelector('.tps-pinned-container').style.height = ''; }, 500);
 };
 
+const promptExportData = async (jsonData, callback) => {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0, 0, 0, 0.8)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "1000";
+
+  const modal = document.createElement("div");
+  modal.style.background = "#18181b";
+  modal.style.padding = "20px";
+  modal.style.borderRadius = "10px";
+  modal.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.3)";
+  modal.style.width = "500px";
+  modal.style.maxWidth = "90%";
+  modal.style.display = "flex";
+  modal.style.flexDirection = "column";
+  modal.style.color = "#efeff1";
+  modal.style.fontFamily = "'Inter', sans-serif";
+  modal.style.position = "relative";
+
+  overlay.appendChild(modal);
+
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "×";
+  closeButton.style.position = "absolute";
+  closeButton.style.top = "10px";
+  closeButton.style.right = "15px";
+  closeButton.style.background = "transparent";
+  closeButton.style.border = "none";
+  closeButton.style.color = "#efeff1";
+  closeButton.style.fontSize = "20px";
+  closeButton.style.cursor = "pointer";
+  closeButton.style.fontWeight = "bold";
+  closeButton.onmouseover = () => (closeButton.style.color = "#9147ff");
+  closeButton.onmouseleave = () => (closeButton.style.color = "#efeff1");
+  closeButton.onclick = function () {
+    document.body.removeChild(overlay);
+  };
+
+  modal.appendChild(closeButton);
+
+  const title = document.createElement("h2");
+  title.textContent = "Twitch Pinned Streamers - Export";
+  title.style.margin = "0 0 10px 0";
+  title.style.fontSize = "18px";
+  title.style.fontWeight = "bold";
+  title.style.textAlign = "center";
+
+  modal.appendChild(title);
+
+  const textarea = document.createElement("textarea");
+  textarea.style.width = "100%";
+  textarea.style.height = "200px";
+  textarea.style.background = "#0e0e10";
+  textarea.style.border = "1px solid #9147ff";
+  textarea.style.color = "#efeff1";
+  textarea.style.borderRadius = "5px";
+  textarea.style.padding = "10px";
+  textarea.style.fontSize = "14px";
+  textarea.style.resize = "none";
+  textarea.value = JSON.stringify(jsonData, null, 2);
+  textarea.setAttribute("readonly", true);
+
+  modal.appendChild(textarea);
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.style.display = "flex";
+  buttonContainer.style.justifyContent = "space-between";
+  buttonContainer.style.marginTop = "15px";
+
+  modal.appendChild(buttonContainer);
+
+  const copyButton = document.createElement("button");
+  copyButton.textContent = "Copy";
+  copyButton.style.background = "#9147ff";
+  copyButton.style.color = "white";
+  copyButton.style.border = "none";
+  copyButton.style.padding = "10px 15px";
+  copyButton.style.borderRadius = "5px";
+  copyButton.style.cursor = "pointer";
+  copyButton.style.fontWeight = "bold";
+  copyButton.style.flex = "1";
+  //copyButton.style.marginRight = "10px";
+  copyButton.style.textAlign = "center";
+  copyButton.onmouseover = () => (copyButton.style.background = "#772ce8");
+  copyButton.onmouseleave = () => (copyButton.style.background = "#9147ff");
+  copyButton.onclick = function () {
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      copyButton.textContent = "Copied!";
+      setTimeout(() => (copyButton.textContent = "Copy"), 2000);
+    }).catch(() => {
+      alert("Failed to copy.");
+    });
+  };
+
+  buttonContainer.appendChild(copyButton);
+
+  /* Use to implement import feature
+  const okButton = document.createElement("button");
+  okButton.textContent = "Accept";
+  okButton.style.background = "#9147ff";
+  okButton.style.color = "white";
+  okButton.style.border = "none";
+  okButton.style.padding = "10px 15px";
+  okButton.style.borderRadius = "5px";
+  okButton.style.cursor = "pointer";
+  okButton.style.fontWeight = "bold";
+  okButton.style.flex = "1";
+  okButton.style.marginRight = "10px";
+  okButton.onmouseover = () => (okButton.style.background = "#772ce8");
+  okButton.onmouseleave = () => (okButton.style.background = "#9147ff");
+  okButton.onclick = function () {
+    try {
+      callback(JSON.parse(textarea.value));
+      document.body.removeChild(overlay);
+    } catch (e) {
+      alert("Invalid JSON format.");
+    }
+  };
+
+  buttonContainer.appendChild(okButton);
+
+  const cancelButton = document.createElement("button");
+  cancelButton.textContent = "Close";
+  cancelButton.style.background = "#3a3a3d";
+  cancelButton.style.color = "white";
+  cancelButton.style.border = "none";
+  cancelButton.style.padding = "10px 15px";
+  cancelButton.style.borderRadius = "5px";
+  cancelButton.style.cursor = "pointer";
+  cancelButton.style.fontWeight = "bold";
+  cancelButton.style.flex = "1";
+  cancelButton.onmouseover = () => (cancelButton.style.background = "#56565a");
+  cancelButton.onmouseleave = () => (cancelButton.style.background = "#3a3a3d");
+  cancelButton.onclick = function () {
+    document.body.removeChild(overlay);
+  };
+
+  buttonContainer.appendChild(cancelButton);*/
+
+  document.body.appendChild(overlay);
+};
+
 const renderPinnedStreamers = async () => {
   const pinnedUsers = localStorageGetAllPinned().map(p => p.user);
   const pinnedStreamers = await batchGetTwitchUsers(pinnedUsers);
 
-  document.getElementById('anon-followed').querySelector('div:nth-child(2)').innerHTML = '';
+  document.getElementById('anon-followed').querySelector('.tps-pinned-container').innerHTML = '';
 
   pinnedStreamers
     .sort((a, b) => ((a.viewers < b.viewers) ? 1 : -1))
@@ -383,7 +619,7 @@ const renderPinnedStreamers = async () => {
       return a.isLive ? -1 : 1;
     })
     .forEach((data) => {
-      document.getElementById('anon-followed').querySelector('div:nth-child(2)').innerHTML += pinnedStreamer({
+      document.getElementById('anon-followed').querySelector('.tps-pinned-container').innerHTML += pinnedStreamer({
         ...data,
       });
     });
@@ -445,10 +681,12 @@ const pinnedHeader = () => {
   const h2 = clonedPinnedHeader.querySelector("h2");
   h2.innerText = "Pinned Channels";
   h2.setAttribute("style", "display:inline-block;");
-  clonedPinnedHeader.innerHTML += addBtn();
+  clonedPinnedHeader.innerHTML += MenuContainerRawHTML;
 
   return clonedPinnedHeader.outerHTML;
 };
+
+const pinnedHeaderBehavior = () => menuContainerBehavior();
 
 const addBtn = () => {
   const clonedBtn = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR).querySelector(BTN_CLONE_SELECTOR).querySelector(BTN_INNER_CLONE_SELECTOR).cloneNode(true);
@@ -762,3 +1000,50 @@ const FollowButtonContainerRawHTML = `
       </div>
   </div>
 `;
+
+const MenuContainerRawHTML = `
+  <div class="tps-menu-container">
+    <div class="tps-menu-icon" id="tps-menu-btn">
+      <button>
+      <svg width="20" height="20" viewBox="0 0 20 20" focusable="false" aria-hidden="true" role="presentation"><path d="M10 18a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0-6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM8 4a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"></path></svg>
+      </button>
+    </div>
+
+    <div class="tps-menu-dropdown" id="tps-menu-dropdown">
+      <ul>
+        <li><a id="tps-add-streamer" href="#">Add Streamer</a></li>
+        <li><a id="tps-export" href="#">Export</a></li>
+      </ul>
+    </div>
+
+    <script>
+        const menuBtn = document.getElementById("tps-menu-btn");
+        const menuDropdown = document.getElementById("tps-menu-dropdown");
+
+        menuBtn.addEventListener("click", function () {
+          menuDropdown.classList.toggle("show");
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!menuBtn.contains(event.target) && !menuDropdown.contains(event.target)) {
+            menuDropdown.classList.remove("show");
+          }
+        });
+    </script>
+  </div>
+`;
+
+const menuContainerBehavior = () => {
+  const menuBtn = document.getElementById("tps-menu-btn");
+  const menuDropdown = document.getElementById("tps-menu-dropdown");
+
+  menuBtn.addEventListener("click", function () {
+    menuDropdown.classList.toggle("show");
+  });
+
+  document.addEventListener("click", function (event) {
+    if (!menuBtn.contains(event.target) && !menuDropdown.contains(event.target)) {
+      menuDropdown.classList.remove("show");
+    }
+  });
+};
