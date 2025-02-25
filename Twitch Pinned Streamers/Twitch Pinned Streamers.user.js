@@ -754,7 +754,8 @@ const renderPinnedStreamers = async () => {
   const pinnedUsers = localStorageGetAllPinned().map(p => p.user);
   const pinnedStreamers = await batchGetTwitchUsers(pinnedUsers);
 
-  document.getElementById('anon-followed').querySelector('.tps-pinned-container').innerHTML = '';
+  const pinnedContainer = document.getElementById('anon-followed').querySelector('.tps-pinned-container');
+  pinnedContainer.innerHTML = '';
 
   pinnedStreamers
     .sort((a, b) => ((a.viewers < b.viewers) ? 1 : -1))
@@ -763,12 +764,27 @@ const renderPinnedStreamers = async () => {
       return a.isLive ? -1 : 1;
     })
     .forEach((data) => {
-      document.getElementById('anon-followed').querySelector('.tps-pinned-container').innerHTML += pinnedStreamer({
+      pinnedContainer.innerHTML += pinnedStreamer({
         ...data,
       });
     });
 
-  document.querySelectorAll('.tps-remove-pinned-streamer').forEach((btn) => {
+  // Click
+
+  pinnedContainer.querySelectorAll('.tps-pinned-streamer-anchor').forEach((anchor) => {
+    anchor.addEventListener('click', async (event) => {
+      event.preventDefault();
+
+      const link = event.target.closest("a");
+      const streamer = link.pathname.slice(1);
+      console.log(link, streamer)
+      navigateToChannel(streamer);
+    });
+  });
+
+  // Remove click
+
+  pinnedContainer.querySelectorAll('.tps-remove-pinned-streamer').forEach((btn) => {
     btn.addEventListener('click', async (event) => {
       const id = event.target.getAttribute('data-id');
       logger.debug(`Removing pinned streamer with id: ${id}`);
@@ -777,6 +793,24 @@ const renderPinnedStreamers = async () => {
     });
   });
 };
+
+const navigateToChannel = (channel) => {
+  return new Promise((resolve) => {
+    history.pushState({}, "", `/${channel}`);
+
+    window.dispatchEvent(new Event("popstate"));
+
+    // Fallback
+    setTimeout(() => {
+      if (!document.body.innerHTML.includes(channel)) {
+        logger.debug("Could not load dinamically, forcing reload...");
+        window.location.reload();
+      }
+      resolve();
+    }, 500);
+  });
+}
+
 
 const renderPinCurrentStreamer = () => {
   const currentUrl = new URL(window.location.href);
@@ -896,7 +930,9 @@ const pinnedStreamer = ({
   if (!isLive) {
     clonedPinnedStreamer.setAttribute("style", "opacity:0.4;");
   }
-  clonedPinnedStreamer.querySelector("a").setAttribute("href", `/${user}`);
+  const aElement = clonedPinnedStreamer.querySelector("a")
+  aElement.setAttribute("href", `/${user}`);
+  aElement.classList?.add("tps-pinned-streamer-anchor");
   const figure = clonedPinnedStreamer.querySelector(".side-nav-card__avatar");
   figure.setAttribute("aria-label", displayName)
   const img = figure.querySelector("img");
