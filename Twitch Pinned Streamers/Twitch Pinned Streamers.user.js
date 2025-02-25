@@ -218,12 +218,7 @@ const main = () => {
       if (requireDataRefresh(lastRefreshedAt)) {
         logger.info("Refreshing pinned streamers.");
 
-        try {
-          await refreshPinnedData();
-          await renderPinnedStreamers();
-        } catch (error) {
-          logger.warn(`Could not refresh pinned streamers. ${error?.message}`);
-        }
+        await execRefresh();
       }
     });
 
@@ -281,7 +276,18 @@ const main = () => {
       // Menu link onclick
       document.getElementById('tps-add-streamer').onclick = promptAddStreamer;
       document.getElementById('tps-export').onclick = () => {
-        promptExportData(localStorageGetAllPinned().map(({user}) => ({user})))
+        promptExportData(localStorageGetAllPinned().map(({ user, pinnedAt }) => ({ user, pinnedAt })))
+      };
+      document.getElementById('tps-import').onclick = () => {
+        promptImportData(async (data) => {
+          const isValid = validateLocalStoragePinnedData(data);
+          if (isValid) {
+            localStorageSetPinned(data);
+            await execRefresh();
+          }
+
+          return isValid;
+        });
       };
 
       const mainSection = relevantContent.querySelector('main');
@@ -393,6 +399,15 @@ const refreshPinnedData = async () => {
   logger.debug("Pinned data refreshed.");
 }
 
+const execRefresh = async () => {
+  try {
+    await refreshPinnedData();
+    await renderPinnedStreamers();
+  } catch (error) {
+    logger.warn(`Could not refresh pinned streamers. ${error?.message}`);
+  }
+};
+
 const injectCSS = () => {
   const style = document.createElement('style');
   document.head.appendChild(style);
@@ -428,6 +443,7 @@ const addStreamer = async (streamerUser) => {
     return;
   }
 
+  user.pinnedAt = new Date().toISOString();
   pinned.push(user);
 
   localStorageSetPinned(pinned);
@@ -545,7 +561,7 @@ const promptExportData = async (jsonData, callback) => {
   copyButton.style.cursor = "pointer";
   copyButton.style.fontWeight = "bold";
   copyButton.style.flex = "1";
-  //copyButton.style.marginRight = "10px";
+  copyButton.style.marginRight = "10px";
   copyButton.style.textAlign = "center";
   copyButton.onmouseover = () => (copyButton.style.background = "#772ce8");
   copyButton.onmouseleave = () => (copyButton.style.background = "#9147ff");
@@ -560,33 +576,8 @@ const promptExportData = async (jsonData, callback) => {
 
   buttonContainer.appendChild(copyButton);
 
-  /* Use to implement import feature
-  const okButton = document.createElement("button");
-  okButton.textContent = "Accept";
-  okButton.style.background = "#9147ff";
-  okButton.style.color = "white";
-  okButton.style.border = "none";
-  okButton.style.padding = "10px 15px";
-  okButton.style.borderRadius = "5px";
-  okButton.style.cursor = "pointer";
-  okButton.style.fontWeight = "bold";
-  okButton.style.flex = "1";
-  okButton.style.marginRight = "10px";
-  okButton.onmouseover = () => (okButton.style.background = "#772ce8");
-  okButton.onmouseleave = () => (okButton.style.background = "#9147ff");
-  okButton.onclick = function () {
-    try {
-      callback(JSON.parse(textarea.value));
-      document.body.removeChild(overlay);
-    } catch (e) {
-      alert("Invalid JSON format.");
-    }
-  };
-
-  buttonContainer.appendChild(okButton);
-
   const cancelButton = document.createElement("button");
-  cancelButton.textContent = "Close";
+  cancelButton.textContent = "Cancel";
   cancelButton.style.background = "#3a3a3d";
   cancelButton.style.color = "white";
   cancelButton.style.border = "none";
@@ -595,13 +586,166 @@ const promptExportData = async (jsonData, callback) => {
   cancelButton.style.cursor = "pointer";
   cancelButton.style.fontWeight = "bold";
   cancelButton.style.flex = "1";
+  cancelButton.style.textAlign = "center";
   cancelButton.onmouseover = () => (cancelButton.style.background = "#56565a");
   cancelButton.onmouseleave = () => (cancelButton.style.background = "#3a3a3d");
   cancelButton.onclick = function () {
     document.body.removeChild(overlay);
   };
 
-  buttonContainer.appendChild(cancelButton);*/
+  buttonContainer.appendChild(cancelButton);
+
+  document.body.appendChild(overlay);
+};
+
+const promptImportData = async (callback) => {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0, 0, 0, 0.8)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "1000";
+
+  const modal = document.createElement("div");
+  modal.style.background = "#18181b";
+  modal.style.padding = "20px";
+  modal.style.borderRadius = "10px";
+  modal.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.3)";
+  modal.style.width = "500px";
+  modal.style.maxWidth = "90%";
+  modal.style.display = "flex";
+  modal.style.flexDirection = "column";
+  modal.style.color = "#efeff1";
+  modal.style.fontFamily = "'Inter', sans-serif";
+  modal.style.position = "relative";
+
+  overlay.appendChild(modal);
+
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "×";
+  closeButton.style.position = "absolute";
+  closeButton.style.top = "10px";
+  closeButton.style.right = "15px";
+  closeButton.style.background = "transparent";
+  closeButton.style.border = "none";
+  closeButton.style.color = "#efeff1";
+  closeButton.style.fontSize = "20px";
+  closeButton.style.cursor = "pointer";
+  closeButton.style.fontWeight = "bold";
+  closeButton.onmouseover = () => (closeButton.style.color = "#9147ff");
+  closeButton.onmouseleave = () => (closeButton.style.color = "#efeff1");
+  closeButton.onclick = function () {
+    document.body.removeChild(overlay);
+  };
+
+  modal.appendChild(closeButton);
+
+  const title = document.createElement("h2");
+  title.textContent = "Import JSON Data";
+  title.style.margin = "0 0 10px 0";
+  title.style.fontSize = "18px";
+  title.style.fontWeight = "bold";
+  title.style.textAlign = "center";
+
+  modal.appendChild(title);
+
+  const textarea = document.createElement("textarea");
+  textarea.style.width = "100%";
+  textarea.style.height = "200px";
+  textarea.style.background = "#0e0e10";
+  textarea.style.border = "1px solid #9147ff";
+  textarea.style.color = "#efeff1";
+  textarea.style.borderRadius = "5px";
+  textarea.style.padding = "10px";
+  textarea.style.fontSize = "14px";
+  textarea.style.resize = "none";
+  textarea.placeholder = "Paste the JSON data here...";
+
+  modal.appendChild(textarea);
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.style.display = "flex";
+  buttonContainer.style.justifyContent = "space-between";
+  buttonContainer.style.marginTop = "15px";
+
+  modal.appendChild(buttonContainer);
+
+  const importButton = document.createElement("button");
+  importButton.textContent = "Import";
+  importButton.style.background = "#9147ff";
+  importButton.style.color = "white";
+  importButton.style.border = "none";
+  importButton.style.padding = "10px 15px";
+  importButton.style.borderRadius = "5px";
+  importButton.style.cursor = "pointer";
+  importButton.style.fontWeight = "bold";
+  importButton.style.flex = "1";
+  importButton.style.marginRight = "10px";
+  importButton.style.textAlign = "center";
+  importButton.onmouseover = () => (importButton.style.background = "#772ce8");
+  importButton.onmouseleave = () => (importButton.style.background = "#9147ff");
+
+  importButton.onclick = async function () {
+    if (!textarea.value) {
+      alert("Please paste the data to import.");
+      return;
+    }
+
+    let parsedData;
+
+    try {
+      parsedData = JSON.parse(textarea.value);
+    } catch (e) {
+      logger.error(e);
+      alert(`Invalid JSON format. Please check the content and try again. \n\n Error: \n${e}`);
+      return;
+    }
+
+    const confirmImport = confirm(
+      "Current data will be overwritten with the imported data. Do you want to continue?"
+    );
+
+    if (confirmImport) {
+      console.log("Imported data:", parsedData);
+
+      const isCallbackSet = typeof callback === "function";
+      let isCallbackSuccess = false;
+
+      if (isCallbackSet) {
+        isCallbackSuccess = await callback(parsedData);
+      }
+
+      if (!isCallbackSet || (isCallbackSet && isCallbackSuccess)) {
+        document.body.removeChild(overlay);
+      }
+    }
+  };
+
+  buttonContainer.appendChild(importButton);
+
+  const cancelButton = document.createElement("button");
+  cancelButton.textContent = "Cancel";
+  cancelButton.style.background = "#3a3a3d";
+  cancelButton.style.color = "white";
+  cancelButton.style.border = "none";
+  cancelButton.style.padding = "10px 15px";
+  cancelButton.style.borderRadius = "5px";
+  cancelButton.style.cursor = "pointer";
+  cancelButton.style.fontWeight = "bold";
+  cancelButton.style.flex = "1";
+  cancelButton.style.textAlign = "center";
+  cancelButton.onmouseover = () => (cancelButton.style.background = "#56565a");
+  cancelButton.onmouseleave = () => (cancelButton.style.background = "#3a3a3d");
+  cancelButton.onclick = function () {
+    document.body.removeChild(overlay);
+  };
+
+  buttonContainer.appendChild(cancelButton);
 
   document.body.appendChild(overlay);
 };
@@ -927,6 +1071,20 @@ const twitchGQLRequest = async ({ query, variables }) => {
 
 // LocalStorage
 
+/**
+ * @param {any} data
+ * @returns boolean
+ *
+ */
+const validateLocalStoragePinnedData = (data) => {
+  return Array.isArray(data) &&
+    data.every(item =>
+      typeof item.user === "string" &&
+      (!item.hasOwnProperty("pinnedAt") ||
+       (typeof item.pinnedAt === "string" && !isNaN(Date.parse(item.pinnedAt))))
+    );
+};
+
 const localStorageGetAllPinned = () => {
   const lsPinned = localStorage.getItem('tps:pinned');
   return lsPinned ? JSON.parse(lsPinned) : [];
@@ -1013,6 +1171,7 @@ const MenuContainerRawHTML = `
       <ul>
         <li><a id="tps-add-streamer" href="#">Add Streamer</a></li>
         <li><a id="tps-export" href="#">Export</a></li>
+        <li><a id="tps-import" href="#">Import</a></li>
       </ul>
     </div>
 
