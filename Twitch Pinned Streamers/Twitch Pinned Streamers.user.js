@@ -28,7 +28,8 @@ const BTN_CLONE_SELECTOR = ".side-nav.side-nav--expanded[data-a-target='side-nav
 const BTN_INNER_CLONE_SELECTOR = ".simplebar-content button[data-a-target='side-nav-arrow']";
 const NAV_CARD_CLONE_SELECTOR = ".side-nav-section .side-nav-card:has(.side-nav-card__avatar)";
 
-const FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR = '#live-channel-stream-information div[data-target="channel-header-right"] div:first-child';
+const FOLLOW_BUTTON_CONTAINER_SELECTOR = "#live-channel-stream-information div[data-target='channel-header-right'] div:first-child";
+const FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR = "#offline-channel-main-content div[data-target='channel-header-right'] div:first-child";
 
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
@@ -308,7 +309,10 @@ const main = () => {
         return;
       }
 
-      const contentFound = document.querySelector(`${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR} button[data-a-target*="follow-button"]`);
+      const contentFound = document.querySelector(`
+        ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR} button[data-a-target*="follow-button"],
+        ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR} button[data-a-target*="follow-button"]
+      `);
       logger.debug(contentFound);
       if (!contentFound) {
         return;
@@ -711,7 +715,7 @@ const promptImportData = async (callback) => {
     );
 
     if (confirmImport) {
-      console.log("Imported data:", parsedData);
+      logger.info("Imported data:", parsedData);
 
       const isCallbackSet = typeof callback === "function";
       let isCallbackSuccess = false;
@@ -777,8 +781,9 @@ const renderPinnedStreamers = async () => {
 
       const link = event.target.closest("a");
       const streamer = link.pathname.slice(1);
-      console.log(link, streamer)
-      navigateToChannel(streamer);
+      await navigateToChannel(streamer);
+
+      renderPinCurrentStreamer();
     });
   });
 
@@ -830,8 +835,10 @@ const renderPinCurrentStreamer = () => {
     isPinned,
   });
 
-  document.querySelector(`${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_CLONE_SELECTOR}`)
-    .outerHTML += pinStreamerCurrentHtml;
+  document.querySelector(`
+    ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR},
+    ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR}
+  `).outerHTML += pinStreamerCurrentHtml;
 
   document.getElementById('tps-pin-current-streamer-button').addEventListener('click', async (e) => {
     e.preventDefault();
