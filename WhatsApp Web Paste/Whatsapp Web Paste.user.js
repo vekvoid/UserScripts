@@ -3,7 +3,7 @@
 // @namespace    https://github.com/vekvoid/UserScripts
 // @homepageURL  https://github.com/vekvoid/UserScripts/
 // @supportURL   https://github.com/vekvoid/UserScripts/issues
-// @description  Temporal workarround for WhatsApp Web paste Ctrl+V behaviour.
+// @description  Temporal workaround for WhatsApp Web paste Ctrl+V behaviour.
 // @match        https://web.whatsapp.com/*
 // @grant        none
 // @icon         https://www.google.com/s2/favicons?domain=web.whatsapp.com
@@ -11,10 +11,9 @@
 // ==/UserScript==
 
 const APP_QUERY = '#app';
-const CONVERSATION_PANEL = '#main';
 const CHAT_TEXTBOX_QUERY = 'footer div[role="textbox"]';
-const ICON_PLACEMENT_CONTAINTER = '._1VZX7';
-const PASTE_BUTTON_ID = 'vk-paste-workarround';
+const ICON_PLACEMENT_CONTAINER = '._1VZX7';
+const PASTE_BUTTON_ID = 'vk-paste-workaround';
 const PASTE_BUTTON_CLASS = 'vk-btn-paste';
 
 const paste = async () => {
@@ -69,12 +68,12 @@ const createPasteButton = () => {
   return pasteBtn;
 };
 
-(function() {
+(function () {
   injectCSS();
 
   const targetChangesDiv = document.querySelector(APP_QUERY);
 
-  const observer = new MutationObserver(function(mutationsList, observer) {
+  const observer = new MutationObserver(function (mutationsList, _observer) {
     for (let mutation of mutationsList) {
       if (mutation.type === 'childList') {
         const alreadyExists = document.getElementById(PASTE_BUTTON_ID);
@@ -82,7 +81,9 @@ const createPasteButton = () => {
           return;
         }
 
-        const textBoxContainer = document.querySelector(CHAT_TEXTBOX_QUERY).closest(ICON_PLACEMENT_CONTAINTER);
+        const textBoxContainer = document
+          .querySelector(CHAT_TEXTBOX_QUERY)
+          .closest(ICON_PLACEMENT_CONTAINER);
         if (!textBoxContainer) {
           return;
         }

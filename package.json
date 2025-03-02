@@ -1,0 +1,28 @@
+{
+  "name": "@vekvoid/userscripts",
+  "version": "1.0.0",
+  "description": "Personal UserScripts",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vekvoid/UserScripts.git"
+  },
+  "author": "vekvoid",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vekvoid/UserScripts/issues"
+  },
+  "homepage": "https://github.com/vekvoid/UserScripts#readme",
+  "devDependencies": {
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.0.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.2"
+  }
+}
