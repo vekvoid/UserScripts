@@ -119,13 +119,22 @@ const css = `
     justify-content: center;
     user-select: none;
   }
+  .tw-root--theme-light .tps-menu-container button {
+    background-color: rgba(0, 0, 0, 0) !important;
+  }
 
   .tps-menu-container button:hover {
     background-color: #393940;
   }
+  .tw-root--theme-dark .tps-menu-container button:hover {
+    background-color: rgba(173, 173, 184, 1.35) !important;
+  }
 
   .tps-menu-icon svg {
     fill: white;
+  }
+  .tw-root--theme-light .tps-menu-icon svg {
+    fill: #0e0e10 !important;
   }
 
   .tps-menu-dropdown {
@@ -172,6 +181,15 @@ const css = `
   }
 
   /* End Menu Styles*/
+
+  /* Current Streamer Pin Button */
+
+  .tw-root--theme-light #tps-pin-current-streamer-button[data-a-target="unpin-button"] {
+    background-color: var(--color-background-button-secondary-default);
+    color: var(--color-text-button-secondary);
+  }
+
+  /* End Current Streamer Pin Button */
 `;
 
 let isWorking = false;
