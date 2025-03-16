@@ -917,10 +917,14 @@ const renderPinCurrentStreamer = () => {
     isPinned,
   });
 
-  document.querySelector(`
-    ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR},
-    ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR}
-  `).outerHTML += pinStreamerCurrentHtml;
+  document
+    .querySelector(
+      `
+        ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR},
+        ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR}
+      `
+    )
+    .insertAdjacentHTML('afterend', pinStreamerCurrentHtml);
 
   document
     .getElementById('tps-pin-current-streamer-button')
