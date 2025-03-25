@@ -954,9 +954,9 @@ const pinnedHeader = () => {
     .querySelector(ALL_RELEVANT_CONTENT_SELECTOR)
     .querySelector(HEADER_CLONE_SELECTOR)
     .cloneNode(true);
-  const h2 = clonedPinnedHeader.querySelector('h2');
-  h2.innerText = 'Pinned Channels';
-  h2.setAttribute('style', 'display:inline-block;');
+  const title = clonedPinnedHeader.querySelector('h2,h3');
+  title.innerText = 'Pinned Channels';
+  title.setAttribute('style', 'display:inline-block;');
   clonedPinnedHeader.innerHTML += MenuContainerRawHTML;
 
   return clonedPinnedHeader.outerHTML;
