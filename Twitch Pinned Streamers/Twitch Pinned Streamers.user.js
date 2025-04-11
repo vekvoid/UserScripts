@@ -32,9 +32,9 @@ const HEADER_CLONE_SELECTOR =
 const BTN_CLONE_SELECTOR =
   '.side-nav.side-nav--expanded[data-a-target="side-nav-bar"]';
 const BTN_INNER_CLONE_SELECTOR =
-  '.simplebar-content button[data-a-target="side-nav-arrow"]';
+  'button[data-a-target="side-nav-arrow"]';
 const NAV_CARD_CLONE_SELECTOR =
-  '.side-nav-section .side-nav-card:has(.side-nav-card__avatar)';
+  '.side-nav-section .side-nav-card:has(a[data-a-id="recommended-channel-0"] .side-nav-card__avatar)';
 
 const FOLLOW_BUTTON_CONTAINER_SELECTOR =
   '#live-channel-stream-information div[data-target="channel-header-right"] div:first-child';
@@ -208,6 +208,7 @@ const main = () => {
 
   waitForMainContainer = setInterval(async () => {
     relevantContent = document.querySelector(ALL_RELEVANT_CONTENT_SELECTOR);
+    logger.debug('Searching main conten...')
 
     if (!relevantContent) {
       return;
