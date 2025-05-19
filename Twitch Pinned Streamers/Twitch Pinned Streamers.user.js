@@ -38,6 +38,10 @@ const NAV_CARD_CLONE_SELECTOR =
 
 const FOLLOW_BUTTON_CONTAINER_SELECTOR =
   '#live-channel-stream-information div[data-target="channel-header-right"] div:first-child';
+
+const FOLLOW_BUTTON_CONTAINER_WAIT_FOR_SELECTOR =
+  '#live-channel-stream-information div[role="presentation"]';
+
 const FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR =
   '#offline-channel-main-content div[data-target="channel-header-right"] div:first-child';
 
@@ -194,6 +198,7 @@ const css = `
 
 let isWorking = false;
 let isWorkingPinCurrentStreamer = false;
+let isDoneFirstPinButtonRender = false;
 
 let isTabVisible = false;
 
@@ -355,12 +360,34 @@ const main = () => {
         return;
       }
 
+
       const contentFound = document.querySelector(`
         ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR} button[data-a-target*="follow-button"],
         ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR} button[data-a-target*="follow-button"]
       `);
       logger.debug(contentFound);
       if (!contentFound) {
+        return;
+      }
+
+      // First pin button render to show it faster
+
+      if (!isDoneFirstPinButtonRender) {
+        isWorkingPinCurrentStreamer = true;
+
+        renderPinCurrentStreamer();
+        isDoneFirstPinButtonRender = true;
+
+        isWorkingPinCurrentStreamer = false;
+      }
+
+      // Rerender the pin button because twitch deletes it
+      const contentPrerequisiteFound = document.querySelector(`
+        ${FOLLOW_BUTTON_CONTAINER_WAIT_FOR_SELECTOR},
+        ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR} button[data-a-target*="follow-button"]
+      `);
+      logger.debug(contentPrerequisiteFound);
+      if (!contentPrerequisiteFound) {
         return;
       }
 
