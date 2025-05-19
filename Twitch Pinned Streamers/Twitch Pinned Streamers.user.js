@@ -7,7 +7,7 @@
 // @match        *://*.twitch.tv/*
 // @grant       none
 // @icon https://www.google.com/s2/favicons?domain=twitch.com
-// @version     1.5.5
+// @version     1.5.6
 // @downloadURL https://update.greasyfork.org/scripts/452717/Twitch%20Pinned%20Streamers%20-%20twitchtv.user.js
 // @updateURL https://update.greasyfork.org/scripts/452717/Twitch%20Pinned%20Streamers%20-%20twitchtv.meta.js
 // ==/UserScript==
