@@ -26,7 +26,7 @@ const CURRENT_LOG_LEVEL = logLevels.info;
 const MINUTES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 
-const ALL_RELEVANT_CONTENT_SELECTOR = '.dShujj';
+const ALL_RELEVANT_CONTENT_SELECTOR = '#root > div > div >div:has(main):has([data-test-selector="side-nav"])';
 const HEADER_CLONE_SELECTOR =
   '.side-nav-header[data-a-target="side-nav-header-expanded"]';
 const BTN_CLONE_SELECTOR =
