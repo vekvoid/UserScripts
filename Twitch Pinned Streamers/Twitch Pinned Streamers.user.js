@@ -22,7 +22,7 @@ const logLevels = {
 };
 
 const NAME = 'Twitch Pinned Streamers';
-const CURRENT_LOG_LEVEL = logLevels.info;
+const CURRENT_LOG_LEVEL = logLevels.debug;
 const MINUTES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 
@@ -219,13 +219,19 @@ const main = () => {
       return;
     }
 
+    logger.debug('Found ALL_RELEVANT_CONTENT_SELECTOR...')
+
     if (relevantContent.childElementCount < 2) {
       return;
     }
 
+    logger.debug('Found ALL_RELEVANT_CONTENT_SELECTOR with 2 child elements...')
+
     if (!relevantContent.querySelector(HEADER_CLONE_SELECTOR)) {
       return;
     }
+
+    logger.debug('Found HEADER_CLONE_SELECTOR...')
 
     if (
       !relevantContent.querySelector(
@@ -234,6 +240,8 @@ const main = () => {
     ) {
       return;
     }
+
+    logger.debug('Found BTN_CLONE_SELECTOR BTN_INNER_CLONE_SELECTOR...')
 
     clearInterval(waitForMainContainer);
 
@@ -1204,7 +1212,7 @@ const batchGetTwitchUsers = async (logins) => {
     variables: { logins, all: false, skip: false },
   });
 
-  const result = twitchUsers.data.users.map((user) => {
+  let result = twitchUsers.data.users.map((user) => {
     if (!user) {
       return {};
     }
@@ -1221,6 +1229,21 @@ const batchGetTwitchUsers = async (logins) => {
       title: user?.broadcastSettings?.title,
     };
   });
+
+  // Remove undefined users returned by API
+  result = result.filter(entry => entry.user !== undefined);
+
+  // Add missing users
+  const existingUserLogins = new Set(result.map((info) => info.user));
+
+  logins.forEach(login => {
+    if (!existingUserLogins.has(login)) {
+      result.push({
+        user: login,
+        displayName: login,
+      })
+    }
+  })
 
   return result;
 };
