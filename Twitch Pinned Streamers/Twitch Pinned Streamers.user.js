@@ -1335,44 +1335,48 @@ const localStorageSetPinnedRefreshedAt = (date) => {
 // Raw HTML
 
 const FollowButtonContainerRawHTML = `
-  <div class="Layout-sc-1xcs6mc-0 cwtKyw">
-      <div class="Layout-sc-1xcs6mc-0 grllUE">
-          <div style="opacity: 1; transform: translateX(50px) translateZ(0px);">
-              <div class="Layout-sc-1xcs6mc-0 lmNILC">
-                  <div class="Layout-sc-1xcs6mc-0 bzcGMK">
-                      <div class="Layout-sc-1xcs6mc-0 hkISPQ">
-                          <div style="opacity: 1;">
-                              <div class="Layout-sc-1xcs6mc-0 bXHHlg">
-                                  <div class="Layout-sc-1xcs6mc-0 fVQeCA"><button aria-label="Follow _____" data-a-target="follow-button" data-test-selector="follow-button" class="ScCoreButton-sc-ocjdkq-0 iumXyx">
-                                          <div class="ScCoreButtonLabel-sc-s7h2b7-0 gPDjGr">
-                                              <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 bFxzAY">
-                                                  <div class="Layout-sc-1xcs6mc-0 ktLpvM">
-                                                      <div class="InjectLayout-sc-1i43xsx-0 bgnKmX" style="transition: transform; opacity: 1;">
-                                                          <div class="ScAnimation-sc-s60rmz-0 kCyYsz tw-animation" data-a-target="tw-animation-target">
-                                                              <div class="Layout-sc-1xcs6mc-0 ktLpvM">
-                                                                  <div class="InjectLayout-sc-1i43xsx-0 kBtJDm">
-                                                                      <figure class="ScFigure-sc-1hrsqw6-0 btGeNA tw-svg"><svg width="20px" height="20px" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScSvg-sc-1hrsqw6-1 ihOSMR">
-                                                                              <g>
-                                                                                  <path fill-rule="evenodd" d="M9.171 4.171A4 4 0 006.343 3H6a4 4 0 00-4 4v.343a4 4 0 001.172 2.829L10 17l6.828-6.828A4 4 0 0018 7.343V7a4 4 0 00-4-4h-.343a4 4 0 00-2.829 1.172L10 5l-.829-.829zm.829 10l5.414-5.414A2 2 0 0016 7.343V7a2 2 0 00-2-2h-.343a2 2 0 00-1.414.586L10 7.828 7.757 5.586A2 2 0 006.343 5H6a2 2 0 00-2 2v.343a2 2 0 00.586 1.414L10 14.172z" clip-rule="evenodd"></path>
-                                                                              </g>
-                                                                          </svg></figure>
-                                                                  </div>
-                                                              </div>
-                                                          </div>
-                                                      </div><span>
-                                                          <div style="transition: all; opacity: 1;">Follow</div>
-                                                      </span>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      </button></div>
+  <div class="Layout-sc-1xcs6mc-0 hXfvew">
+    <div style="opacity: 1; transition: transform 200ms ease-in 200ms;">
+      <div class="Layout-sc-1xcs6mc-0 csXQOq">
+        <div class="Layout-sc-1xcs6mc-0 hSUuOs">
+          <div class="Layout-sc-1xcs6mc-0 cBCBY">
+            <div style="opacity: 1; transition: transform 200ms ease-in 200ms;">
+              <div class="Layout-sc-1xcs6mc-0 iglnKI">
+                <div class="Layout-sc-1xcs6mc-0 hxpxxi">
+                  <button aria-label="Follow _____" data-a-target="follow-button" data-test-selector="follow-button" class="ScCoreButton-sc-ocjdkq-0 gxYeIp">
+                    <div class="ScCoreButtonLabel-sc-s7h2b7-0 kaIUar">
+                      <div data-a-target="tw-core-button-label-text" class="Layout-sc-1xcs6mc-0 bLZXTb">
+                        <div class="Layout-sc-1xcs6mc-0 ceVcik">
+                          <div class="InjectLayout-sc-1i43xsx-0 kxAWvZ" style="transition: transform 200ms; opacity: 1;">
+                            <div class="ScAnimation-sc-s60rmz-0 ckYenn tw-animation" data-a-target="tw-animation-target">
+                              <div class="Layout-sc-1xcs6mc-0 ceVcik">
+                                <div class="InjectLayout-sc-1i43xsx-0 iDMNUO">
+                                  <figure class="ScFigure-sc-1hrsqw6-0 iozBbY tw-svg">
+                                    <svg width="20px" height="20px" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScSvg-sc-1hrsqw6-1 dzvvut">
+                                      <g>
+                                        <path fill-rule="evenodd" d="M9.171 4.171A4 4 0 006.343 3H6a4 4 0 00-4 4v.343a4 4 0 001.172 2.829L10 17l6.828-6.828A4 4 0 0018 7.343V7a4 4 0 00-4-4h-.343a4 4 0 00-2.829 1.172L10 5l-.829-.829zm.829 10l5.414-5.414A2 2 0 0016 7.343V7a2 2 0 00-2-2h-.343a2 2 0 00-1.414.586L10 7.828 7.757 5.586A2 2 0 006.343 5H6a2 2 0 00-2 2v.343a2 2 0 00.586 1.414L10 14.172z" clip-rule="evenodd"></path>
+                                      </g>
+                                    </svg>
+                                  </figure>
+                                </div>
                               </div>
+                            </div>
                           </div>
+                          <span>
+                            <div style="transition: 200ms; opacity: 1;">Follow</div>
+                          </span>
+                        </div>
                       </div>
-                  </div>
+                    </div>
+                  </button>
+                </div>
               </div>
+            </div>
           </div>
+        </div>
+
       </div>
+    </div>
   </div>
 `;
 
