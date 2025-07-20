@@ -22,7 +22,7 @@ const logLevels = {
 };
 
 const NAME = 'Twitch Pinned Streamers';
-const CURRENT_LOG_LEVEL = logLevels.debug;
+const CURRENT_LOG_LEVEL = logLevels.info;
 const MINUTES_SINCE_FOCUS_LOST_FOR_REFRESH = 1;
 const REFRESH_DISPLAYED_DATA_DELAY_MINUTES = 5;
 
@@ -48,20 +48,7 @@ const FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR =
 const TWITCH_GRAPHQL = 'https://gql.twitch.tv/gql';
 const CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'; // From Alternate Player for Twitch.tv
 
-const logger = {
-  trace: (...args) =>
-    logLevels.trace >= CURRENT_LOG_LEVEL && console.trace(`${NAME}:`, ...args),
-  debug: (...args) =>
-    logLevels.debug >= CURRENT_LOG_LEVEL && console.log(`${NAME}:`, ...args),
-  info: (...args) =>
-    logLevels.info >= CURRENT_LOG_LEVEL && console.info(`${NAME}:`, ...args),
-  warn: (...args) =>
-    logLevels.warn >= CURRENT_LOG_LEVEL && console.warn(`${NAME}:`, ...args),
-  error: (...args) =>
-    logLevels.error >= CURRENT_LOG_LEVEL && console.error(`${NAME}:`, ...args),
-  fatal: (...args) =>
-    logLevels.fatal >= CURRENT_LOG_LEVEL && console.fatal(`${NAME}:`, ...args),
-};
+const logger = createLogger(NAME, CURRENT_LOG_LEVEL, logLevels);
 
 const css = `
   .tps-pinned-container {
@@ -288,7 +275,7 @@ const main = () => {
       const sidebar = relevantContent.querySelector(
         `.side-nav.side-nav--expanded`
       );
-      logger.debug(sidebar);
+      logger.debug("sidebar", sidebar);
       if (!sidebar) {
         return;
       }
@@ -296,6 +283,7 @@ const main = () => {
       if (!sidebar.querySelector(`${NAV_CARD_CLONE_SELECTOR}`)) {
         return;
       }
+      logger.debug("found NAV_CARD_CLONE_SELECTOR");
 
       isWorking = true;
 
@@ -352,7 +340,7 @@ const main = () => {
 
       const mainSection = relevantContent.querySelector('main');
 
-      logger.debug(sidebar, mainSection);
+      logger.debug("sidebar, mainSection", sidebar, mainSection);
       isWorking = false;
       observer.disconnect();
     });
@@ -373,7 +361,7 @@ const main = () => {
         ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_CONTAINER_SELECTOR} button[data-a-target*="follow-button"],
         ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR} button[data-a-target*="follow-button"]
       `);
-      logger.debug(contentFound);
+      logger.debug("contentFound", contentFound);
       if (!contentFound) {
         return;
       }
@@ -394,7 +382,7 @@ const main = () => {
         ${FOLLOW_BUTTON_CONTAINER_WAIT_FOR_SELECTOR},
         ${ALL_RELEVANT_CONTENT_SELECTOR} ${FOLLOW_BUTTON_OFFLINE_CONTAINER_SELECTOR} button[data-a-target*="follow-button"]
       `);
-      logger.debug(contentPrerequisiteFound);
+      logger.debug("contentPrerequisiteFound", contentPrerequisiteFound);
       if (!contentPrerequisiteFound) {
         return;
       }
@@ -524,7 +512,7 @@ const addStreamer = async (streamerUser) => {
   }
 
   const [user] = await batchGetTwitchUsers([streamerUser]);
-  logger.debug(user);
+  logger.debug("user", user);
   if (!user.id) {
     const message = `Streamer '${streamerUser}' not found.`;
     logger.warn(message);
@@ -1429,4 +1417,23 @@ const menuContainerBehavior = () => {
       menuDropdown.classList.remove('show');
     }
   });
+};
+
+// Logger
+
+function createLogger(name, currentLevel, levels) {
+  const noop = () => {};
+
+  const method = (consoleMethod, level) => {
+    return levels[level] >= currentLevel ? console[consoleMethod].bind(console, `${name}:`) : noop;
+  };
+
+  return {
+    trace: method('trace', 'trace'),
+    debug: method('log', 'debug'),
+    info: method('info', 'info'),
+    warn: method('warn', 'warn'),
+    error: method('error', 'error'),
+    fatal: method('error', 'fatal'),
+  };
 };
