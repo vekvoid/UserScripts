@@ -1080,7 +1080,7 @@ const pinnedStreamer = ({
   metadata.title = displayName;
   metadata.innerText = displayName;
   const streamCategory = clonedPinnedStreamer.querySelector(
-    "[data-a-target='side-nav-game-title'] p"
+    "[data-a-target='side-nav-game-title'] p, [data-a-target='side-nav-card-metadata'] div:nth-child(2) p"
   );
   streamCategory.title = isLive ? category : '';
   streamCategory.innerText = isLive ? category : '';
